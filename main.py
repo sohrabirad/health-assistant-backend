@@ -1,16 +1,25 @@
 import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 import uvicorn
 
 app = FastAPI()
 
-# کلید API را از متغیر محیطی می‌خوانیم، اگر نبود خطا می‌دهد
+# فعال کردن CORS برای همه دامنه‌ها (برای توسعه راحت)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # در تولید محدودش کن
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 api_key = os.getenv("YOUR_GAPGPT_API_KEY")
 if not api_key:
     raise ValueError("لطفا متغیر محیطی YOUR_GAPGPT_API_KEY را تنظیم کنید.")
 
-client = OpenAI(base_url='https://api.gapgpt.app/v1', api_key='sk-wI6iYOpWHfhhVCPeLhXKty6gZRn8naBAJvcOY1i4Vi31HJOg')
+client = OpenAI(base_url='https://api.gapgpt.app/v1', api_key=api_key)
 
 @app.get("/")
 async def root():
@@ -35,6 +44,5 @@ async def websocket_endpoint(websocket: WebSocket):
         print("Client disconnected")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080)) 
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
