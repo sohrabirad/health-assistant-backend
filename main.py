@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from fastapi import FastAPI
 from chat_api import router as chat_router
+from fastapi.staticfiles import StaticFiles
+
 import uvicorn
 
 app = FastAPI()
@@ -18,6 +20,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# سرو کردن فایل‌های استاتیک فرانت‌اند
+app.mount("/static", StaticFiles(directory="Front"), name="static")
+
 
 api_key = os.getenv("YOUR_GAPGPT_API_KEY")
 if not api_key:

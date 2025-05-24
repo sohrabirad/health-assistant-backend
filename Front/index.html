@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>چت پیشرفته دستیار سلامت</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.5rem;
+  }
+  #chat {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .message {
+    max-width: 70%;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 12px;
+    position: relative;
+    word-wrap: break-word;
+  }
+  .user {
+    align-self: flex-end;
+    background-color: #d1e7ff;
+  }
+  .assistant {
+    align-self: flex-start;
+    background-color: #e2ffe2;
+  }
+  .timestamp {
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 4px;
+    text-align: right;
+  }
+  #inputArea {
+    display: flex;
+    padding: 10px;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+  }
+  #inputMsg {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+  }
+  #inputMsg:focus {
+    border-color: #007bff;
+  }
+  #sendBtn {
+    padding: 0 20px;
+    margin-left: 10px;
+    font-size: 1rem;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #sendBtn:disabled {
+    background-color: #a0c7ff;
+    cursor: not-allowed;
+  }
+  /* Dark mode toggle button */
+  #toggleThemeBtn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  /* Dark mode styles */
+  body.dark {
+    background-color: #121212;
+    color: #eee;
+  }
+  body.dark #chat {
+    background-color: #1e1e1e;
+  }
+  body.dark .user {
+    background-color: #265aeb;
+    color: white;
+  }
+  body.dark .assistant {
+    background-color: #2e7d32;
+    color: white;
+  }
+  body.dark #inputArea {
+    background-color: #1e1e1e;
+    border-top: 1px solid #444;
+  }
+  body.dark #inputMsg {
+    background-color: #2a2a2a;
+    border-color: #555;
+    color: white;
+  }
+  body.dark #sendBtn {
+    background-color: #265aeb;
+  }
+  body.dark #sendBtn:disabled {
+    background-color: #598efc;
+  }
+  body.dark #toggleThemeBtn {
+    background-color: #265aeb;
+  }
+</style>
+</head>
+<body>
+
+<header>چت پیشرفته دستیار سلامت</header>
+<button id="toggleThemeBtn" title="تغییر تم">تم تاریک/روشن</button>
+
+<div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+<div id="inputArea">
+  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" aria-label="پیام خود را بنویسید" />
+  <button id="sendBtn" disabled>ارسال</button>
+</div>
+
+<script>
+  const chatDiv = document.getElementById('chat');
+  const inputMsg = document.getElementById('inputMsg');
+  const sendBtn = document.getElementById('sendBtn');
+  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+
+  const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
+
+  // فعال/غیرفعال کردن دکمه ارسال بر اساس وجود متن
+  inputMsg.addEventListener('input', () => {
+    sendBtn.disabled = inputMsg.value.trim() === "";
+  });
+
+  // افزودن پیام به چت با زمان
+  function appendMessage(text, role) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ' + role;
+
+    const messageText = document.createElement('div');
+    messageText.textContent = text;
+
+    const timestamp = document.createElement('div');
+    timestamp.className = 'timestamp';
+    const now = new Date();
+    timestamp.textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+
+    msgDiv.appendChild(messageText);
+    msgDiv.appendChild(timestamp);
+    chatDiv.appendChild(msgDiv);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  }
+
+  // ارسال پیام به سرور
+  async function sendMessage() {
+    const text = inputMsg.value.trim();
+    if (!text) return;
+    appendMessage(text, "user");
+    inputMsg.value = '';
+    sendBtn.disabled = true;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      if (!response.ok) throw new Error("خطا در پاسخ سرور");
+      const data = await response.json();
+      appendMessage(data.answer, "assistant");
+    } catch (error) {
+      appendMessage("خطا در ارتباط با سرور", "assistant");
+      console.error(error);
+    }
+  }
+
+  // ارسال پیام با کلیک دکمه
+  sendBtn.addEventListener('click', sendMessage);
+
+  // ارسال پیام با کلید Enter
+  inputMsg.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !sendBtn.disabled) {
+      sendMessage();
+    }
+  });
+
+  // تغییر تم تاریک و روشن و ذخیره در لوکال استوریج
+  function setTheme(dark) {
+    if(dark){
+      document.body.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  toggleThemeBtn.addEventListener('click', () => {
+    setTheme(!document.body.classList.contains('dark'));
+  });
+
+  // بارگذاری تم ذخیره شده
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme === 'dark'){
+    setTheme(true);
+  } else {
+    setTheme(false);
+  }
+</script>
+
+</body>
+</html>
