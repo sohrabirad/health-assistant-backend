@@ -35,6 +35,7 @@
     border-radius: 12px;
     position: relative;
     word-wrap: break-word;
+    white-space: pre-wrap; /* برای حفظ ساختار */
   }
   .user {
     align-self: flex-end;
@@ -55,6 +56,7 @@
     padding: 10px;
     background-color: #fff;
     border-top: 1px solid #ccc;
+    align-items: center;
   }
   #inputMsg {
     flex-grow: 1;
@@ -81,65 +83,39 @@
     background-color: #a0c7ff;
     cursor: not-allowed;
   }
-  /* Dark mode toggle button */
-  #toggleThemeBtn {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
+  #loadingSpinner {
+    display: none;
+    margin-left: 10px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    animation: spin 1s linear infinite;
   }
-
-  /* Dark mode styles */
-  body.dark {
-    background-color: #121212;
-    color: #eee;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
-  body.dark #chat {
-    background-color: #1e1e1e;
+  /* Scrollbar کوچک‌تر */
+  #chat::-webkit-scrollbar {
+    width: 6px;
   }
-  body.dark .user {
-    background-color: #265aeb;
-    color: white;
-  }
-  body.dark .assistant {
-    background-color: #2e7d32;
-    color: white;
-  }
-  body.dark #inputArea {
-    background-color: #1e1e1e;
-    border-top: 1px solid #444;
-  }
-  body.dark #inputMsg {
-    background-color: #2a2a2a;
-    border-color: #555;
-    color: white;
-  }
-  body.dark #sendBtn {
-    background-color: #265aeb;
-  }
-  body.dark #sendBtn:disabled {
-    background-color: #598efc;
-  }
-  body.dark #toggleThemeBtn {
-    background-color: #265aeb;
+  #chat::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
   }
 </style>
 </head>
 <body>
 
 <header>چت پیشرفته دستیار سلامت</header>
-<button id="toggleThemeBtn" title="تغییر تم">تم تاریک/روشن</button>
 
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
 <div id="inputArea">
   <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" aria-label="پیام خود را بنویسید" />
+  <div id="loadingSpinner" aria-label="در حال بارگذاری"></div>
   <button id="sendBtn" disabled>ارسال</button>
 </div>
 
@@ -147,33 +123,57 @@
   const chatDiv = document.getElementById('chat');
   const inputMsg = document.getElementById('inputMsg');
   const sendBtn = document.getElementById('sendBtn');
-  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+  const loadingSpinner = document.getElementById('loadingSpinner');
 
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
-  // فعال/غیرفعال کردن دکمه ارسال بر اساس وجود متن
-  inputMsg.addEventListener('input', () => {
-    sendBtn.disabled = inputMsg.value.trim() === "";
-  });
+  // بارگذاری تاریخچه چت از لوکال استوریج
+  function loadChatHistory() {
+    const history = localStorage.getItem('chat_history');
+    if (!history) return;
+    const messages = JSON.parse(history);
+    messages.forEach(({role, text, timestamp}) => {
+      appendMessage(text, role, timestamp);
+    });
+  }
+
+  // ذخیره پیام‌ها در لوکال استوریج
+  function saveMessage(role, text, timestamp) {
+    let history = localStorage.getItem('chat_history');
+    history = history ? JSON.parse(history) : [];
+    history.push({role, text, timestamp});
+    localStorage.setItem('chat_history', JSON.stringify(history));
+  }
 
   // افزودن پیام به چت با زمان
-  function appendMessage(text, role) {
+  function appendMessage(text, role, timestamp=null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
 
     const messageText = document.createElement('div');
     messageText.textContent = text;
 
-    const timestamp = document.createElement('div');
-    timestamp.className = 'timestamp';
-    const now = new Date();
-    timestamp.textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'timestamp';
+    if (!timestamp) {
+      const now = new Date();
+      timestamp = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    }
+    timeDiv.textContent = timestamp;
 
     msgDiv.appendChild(messageText);
-    msgDiv.appendChild(timestamp);
+    msgDiv.appendChild(timeDiv);
     chatDiv.appendChild(msgDiv);
     chatDiv.scrollTop = chatDiv.scrollHeight;
+
+    // ذخیره پیام در لوکال استوریج
+    saveMessage(role, text, timestamp);
   }
+
+  // فعال/غیرفعال کردن دکمه ارسال بر اساس وجود متن
+  inputMsg.addEventListener('input', () => {
+    sendBtn.disabled = inputMsg.value.trim() === "";
+  });
 
   // ارسال پیام به سرور
   async function sendMessage() {
@@ -182,6 +182,7 @@
     appendMessage(text, "user");
     inputMsg.value = '';
     sendBtn.disabled = true;
+    loadingSpinner.style.display = "inline-block";
 
     try {
       const response = await fetch(apiUrl, {
@@ -195,6 +196,9 @@
     } catch (error) {
       appendMessage("خطا در ارتباط با سرور", "assistant");
       console.error(error);
+    } finally {
+      sendBtn.disabled = false;
+      loadingSpinner.style.display = "none";
     }
   }
 
@@ -208,28 +212,8 @@
     }
   });
 
-  // تغییر تم تاریک و روشن و ذخیره در لوکال استوریج
-  function setTheme(dark) {
-    if(dark){
-      document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.body.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }
-
-  toggleThemeBtn.addEventListener('click', () => {
-    setTheme(!document.body.classList.contains('dark'));
-  });
-
-  // بارگذاری تم ذخیره شده
-  const savedTheme = localStorage.getItem('theme');
-  if(savedTheme === 'dark'){
-    setTheme(true);
-  } else {
-    setTheme(false);
-  }
+  // بارگذاری تاریخچه هنگام شروع
+  loadChatHistory();
 </script>
 
 </body>
