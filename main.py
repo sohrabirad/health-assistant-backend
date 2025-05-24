@@ -2,9 +2,13 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
+from fastapi import FastAPI
+from chat_api import router as chat_router
 import uvicorn
 
 app = FastAPI()
+
+app.include_router(chat_router, prefix="/chatapi")
 
 # فعال کردن CORS برای همه دامنه‌ها (برای توسعه راحت)
 app.add_middleware(
