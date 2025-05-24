@@ -4,9 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>چت پیشرفته دستیار سلامت</title>
+
 <style>
+  @font-face {
+    font-family: 'IranSans';
+    src: url('Fonts/irsans.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'IranSans', Tahoma, sans-serif;
     background-color: #f5f7fa;
     margin: 0;
     padding: 0;
@@ -35,7 +43,7 @@
     border-radius: 12px;
     position: relative;
     word-wrap: break-word;
-    white-space: pre-wrap; /* برای حفظ ساختار */
+    white-space: pre-wrap;
   }
   .user {
     align-self: flex-end;
@@ -97,13 +105,44 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  /* Scrollbar کوچک‌تر */
   #chat::-webkit-scrollbar {
     width: 6px;
   }
   #chat::-webkit-scrollbar-thumb {
     background-color: #ccc;
     border-radius: 3px;
+  }
+
+  /* Dark mode */
+  body.dark {
+    background-color: #121212;
+    color: #eee;
+  }
+  body.dark #chat {
+    background-color: #1e1e1e;
+  }
+  body.dark .user {
+    background-color: #265aeb;
+    color: white;
+  }
+  body.dark .assistant {
+    background-color: #2e7d32;
+    color: white;
+  }
+  body.dark #inputArea {
+    background-color: #1e1e1e;
+    border-top: 1px solid #444;
+  }
+  body.dark #inputMsg {
+    background-color: #2a2a2a;
+    border-color: #555;
+    color: white;
+  }
+  body.dark #sendBtn {
+    background-color: #265aeb;
+  }
+  body.dark #sendBtn:disabled {
+    background-color: #598efc;
   }
 </style>
 </head>
@@ -127,7 +166,6 @@
 
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
-  // بارگذاری تاریخچه چت از لوکال استوریج
   function loadChatHistory() {
     const history = localStorage.getItem('chat_history');
     if (!history) return;
@@ -137,7 +175,6 @@
     });
   }
 
-  // ذخیره پیام‌ها در لوکال استوریج
   function saveMessage(role, text, timestamp) {
     let history = localStorage.getItem('chat_history');
     history = history ? JSON.parse(history) : [];
@@ -145,7 +182,6 @@
     localStorage.setItem('chat_history', JSON.stringify(history));
   }
 
-  // افزودن پیام به چت با زمان
   function appendMessage(text, role, timestamp=null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
@@ -166,16 +202,13 @@
     chatDiv.appendChild(msgDiv);
     chatDiv.scrollTop = chatDiv.scrollHeight;
 
-    // ذخیره پیام در لوکال استوریج
     saveMessage(role, text, timestamp);
   }
 
-  // فعال/غیرفعال کردن دکمه ارسال بر اساس وجود متن
   inputMsg.addEventListener('input', () => {
     sendBtn.disabled = inputMsg.value.trim() === "";
   });
 
-  // ارسال پیام به سرور
   async function sendMessage() {
     const text = inputMsg.value.trim();
     if (!text) return;
@@ -202,17 +235,15 @@
     }
   }
 
-  // ارسال پیام با کلیک دکمه
   sendBtn.addEventListener('click', sendMessage);
 
-  // ارسال پیام با کلید Enter
   inputMsg.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !sendBtn.disabled) {
       sendMessage();
     }
   });
 
-  // بارگذاری تاریخچه هنگام شروع
+  // Load saved chat history on page load
   loadChatHistory();
 </script>
 
