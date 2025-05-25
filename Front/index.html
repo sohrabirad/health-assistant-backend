@@ -5,7 +5,239 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>دستیار هوش مصنوعی پویان</title>
   <style>
-    /* استایل‌ها مشابه کد قبلی شما */
+    @font-face {
+      font-family: 'IranSans';
+      src: url('Fonts/irsans.ttf') format('truetype');
+    }
+
+    body {
+      font-family: 'IranSans', Tahoma, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      direction: rtl;
+      text-align: right;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      font-size: 1.5rem;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #tokenDisplay {
+      background-color: #e0e0e0;
+      color: #333;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #ccc;
+      direction: ltr;
+      text-align: left;
+      user-select: none;
+    }
+
+    #chat-container {
+      flex-grow: 1;
+      position: relative;
+      overflow-y: auto;
+      padding-bottom: 120px; /* فضای اضافی برای ثابت بودن باکس ورودی */
+    }
+
+    #chat {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #007bff #e0e0e0;
+      text-align: right;
+      background: white;
+    }
+
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #chat::-webkit-scrollbar-track {
+      background: #e0e0e0;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #007bff;
+      border-radius: 10px;
+    }
+
+    .chat-block {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      max-width: 70%;
+      margin: 4px 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      line-height: 1.3;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      text-align: right;
+      background: #e2ffe2;
+      color: #1b4332;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: #d1e7ff;
+      color: #0a3d62;
+    }
+
+    .assistant {
+      align-self: flex-start;
+    }
+
+    .timestamp {
+      font-size: 0.65rem;
+      color: #666;
+      margin-top: 4px;
+      text-align: right;
+      user-select: none;
+    }
+
+    #loadingIndicator {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      background: transparent;
+      z-index: 1000;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+      align-items: center;
+      direction: rtl;
+      position: fixed;
+      bottom: 0;
+      left: 20px;
+      width: calc(100% - 40px); /* عرض کامل باکس */
+      z-index: 999;
+      border-radius: 6px;
+    }
+
+    #inputMsg {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      resize: vertical;
+      min-height: 40px;
+      max-height: 120px;
+      direction: rtl;
+      text-align: right;
+      font-family: 'IranSans', Tahoma, sans-serif;
+    }
+
+    #sendBtn, #newChatBtn {
+      padding: 0 20px;
+      margin-left: 10px;
+      font-size: 1rem;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      height: 40px;
+      font-family: 'IranSans', Tahoma, sans-serif; /* تغییر فونت به ایران سنس */
+    }
+
+    #sendBtn:disabled, #newChatBtn:disabled {
+      background-color: #a0c7ff;
+      cursor: not-allowed;
+    }
+
+    #modelSelect {
+      margin-left: 10px;
+      padding: 5px;
+      border-radius: 6px;
+      font-family: inherit;
+      cursor: pointer;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .message-content {
+      font-size: 0.85rem;
+      line-height: 1.3;
+      color: inherit;
+      text-align: right;
+    }
+
+    #headerContent {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    #headerContent select {
+      padding: 5px;
+      border-radius: 6px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* برای صفحه موبایل */
+    @media screen and (max-width: 768px) {
+      #inputArea {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #sendBtn {
+        margin-top: 10px;
+      }
+      #headerContent {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      #tokenDisplay {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+      }
+      #chat-container {
+        padding-bottom: 50px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -24,7 +256,7 @@
 
 <div id="inputArea">
   <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
-  <!-- اضافه کردن ورودی فایل -->
+  <!-- ورودی فایل اضافه شده -->
   <input type="file" id="fileInput" accept=".txt, .pdf" />
   <div>&nbsp;</div>
   <button id="sendBtn" disabled>ارسال</button>
@@ -40,7 +272,7 @@
   const modelSelect = document.getElementById('modelSelect');
   const tokenDisplay = document.getElementById('tokenDisplay');
   const newChatBtn = document.getElementById('newChatBtn');
-  const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat"; // تغییر آدرس به سرور واقعی
+  const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
   // بارگذاری مدل‌ها
   const modelList = [
@@ -155,7 +387,6 @@
     sendBtn.disabled = inputMsg.value.trim() === "";
   });
 
-  // ارسال پیام همراه با فایل
   async function sendMessage() {
     const userText = inputMsg.value.trim();
     const fileInput = document.getElementById('fileInput');
@@ -210,10 +441,14 @@
   });
 
   newChatBtn.addEventListener('click', () => {
-    if (confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟")) {
+    const confirmNewChat = confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟ این کار تمامی سوابق چت را پاک خواهد کرد.");
+    if(confirmNewChat) {
       qaPairs = [];
       chatDiv.innerHTML = "";  // پاک کردن چت
-      inputMsg.value = "";
+      totalInputTokens = 0;
+      totalOutputTokens = 0;
+      updateTokenDisplay(totalInputTokens, totalOutputTokens);
+      localStorage.removeItem("qaPairs"); // پاک کردن سابقه از localStorage
     }
   });
 
