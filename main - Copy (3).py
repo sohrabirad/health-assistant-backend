@@ -1,14 +1,12 @@
 import os
-from fastapi import FastAPI, Request, File, UploadFile
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 import uvicorn
-from io import BytesIO
-from PyPDF2 import PdfReader
 
 app = FastAPI()
 
-# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # در تولید محدودش کنید
@@ -17,40 +15,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API Key
+app.mount("/static", StaticFiles(directory="Front"), name="static")
+
 api_key = os.getenv("YOUR_GAPGPT_API_KEY")
 if not api_key:
     raise ValueError("لطفا متغیر محیطی YOUR_GAPGPT_API_KEY را تنظیم کنید.")
 
-# OpenAI Client
 client = OpenAI(base_url='https://api.gapgpt.app/v1', api_key=api_key)
 
-# چت با مدل
 @app.post("/chat")
-async def chat_endpoint(request: Request, file: UploadFile = File(None)):
-    # دریافت محتوای پیام کاربر
+async def chat_endpoint(request: Request):
     data = await request.json()
     conversation = data.get("conversation")
     model = data.get("model", "gpt-4o")
-    
-    # اگر فایل ارسال شده باشد
-    if file:
-        file_content = await file.read()
-        if file.filename.endswith('.pdf'):
-            # استخراج متن از PDF
-            text = extract_text_from_pdf(file_content)
-        else:
-            # فرض می‌کنیم که فایل متنی است
-            text = file_content.decode('utf-8')
-        
-        conversation.append({"role": "user", "content": text})
 
-    # اگر conversation موجود نباشد، یک مقدار پیش‌فرض قرار می‌دهیم
     if not conversation or not isinstance(conversation, list):
         conversation = [
-            {"role": "system", "content": "شما یک فرد خبره هستید و در حال کار با یک دستیار هوشمند می باشید."}
+            {"role": "system", "content": "شما یک فرد خبره هستید و در حال کار کردن با یک دستیار هوشمند می باشید."}
         ]
-    
+
     try:
         response = client.chat.completions.create(
             model=model,
@@ -61,14 +44,6 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
 
     except Exception as e:
         return {"error": f"مشکلی در ارتباط با مدل {model} پیش آمد: {str(e)}"}
-
-def extract_text_from_pdf(file_content: bytes) -> str:
-    """استخراج متن از فایل PDF"""
-    pdf_reader = PdfReader(BytesIO(file_content))
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
 
 @app.get("/")
 async def root():

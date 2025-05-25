@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>دستیار هوش مصنوعی پویان</title>
+  <style>
+    @font-face {
+      font-family: 'IranSans';
+      src: url('Fonts/irsans.ttf') format('truetype');
+    }
+
+    body {
+      font-family: 'IranSans', Tahoma, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      direction: rtl;
+      text-align: right;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      font-size: 1.5rem;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #tokenDisplay {
+      background-color: #e0e0e0;
+      color: #333;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #ccc;
+      direction: ltr;
+      text-align: left;
+      user-select: none;
+    }
+
+    #chat-container {
+      flex-grow: 1;
+      position: relative;
+      overflow-y: auto;
+      padding-bottom: 120px; /* فضای اضافی برای ثابت بودن باکس ورودی */
+    }
+
+    #chat {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #007bff #e0e0e0;
+      text-align: right;
+      background: white;
+    }
+
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #chat::-webkit-scrollbar-track {
+      background: #e0e0e0;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #007bff;
+      border-radius: 10px;
+    }
+
+    .chat-block {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      max-width: 70%;
+      margin: 4px 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      line-height: 1.3;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      text-align: right;
+      background: #e2ffe2;
+      color: #1b4332;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: #d1e7ff;
+      color: #0a3d62;
+    }
+
+    .assistant {
+      align-self: flex-start;
+    }
+
+    .timestamp {
+      font-size: 0.65rem;
+      color: #666;
+      margin-top: 4px;
+      text-align: right;
+      user-select: none;
+    }
+
+    #loadingIndicator {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      background: transparent;
+      z-index: 1000;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+      align-items: center;
+      direction: rtl;
+      position: fixed;
+      bottom: 0;
+      left: 20px;
+      width: calc(100% - 40px); /* عرض کامل باکس */
+      z-index: 999;
+      border-radius: 6px;
+    }
+
+    #inputMsg {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      resize: vertical;
+      min-height: 40px;
+      max-height: 120px;
+      direction: rtl;
+      text-align: right;
+      font-family: 'IranSans', Tahoma, sans-serif;
+    }
+
+    #sendBtn, #newChatBtn {
+      padding: 0 20px;
+      margin-left: 10px;
+      font-size: 1rem;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      height: 40px;
+      font-family: 'IranSans', Tahoma, sans-serif; /* تغییر فونت به ایران سنس */
+    }
+
+    #sendBtn:disabled, #newChatBtn:disabled {
+      background-color: #a0c7ff;
+      cursor: not-allowed;
+    }
+
+    #modelSelect {
+      margin-left: 10px;
+      padding: 5px;
+      border-radius: 6px;
+      font-family: inherit;
+      cursor: pointer;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .message-content {
+      font-size: 0.85rem;
+      line-height: 1.3;
+      color: inherit;
+      text-align: right;
+    }
+
+    #headerContent {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    #headerContent select {
+      padding: 5px;
+      border-radius: 6px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* برای صفحه موبایل */
+    @media screen and (max-width: 768px) {
+      #inputArea {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      #sendBtn {
+        margin-top: 10px;
+      }
+      #headerContent {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      #tokenDisplay {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+      }
+      #chat-container {
+        padding-bottom: 50px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<header id="headerContent">
+  <div>دستیار هوش مصنوعی پویان (نسخه 1.07)</div>
+  <select id="modelSelect" aria-label="انتخاب مدل هوش مصنوعی"></select>
+</header>
+
+<div id="tokenDisplay">توکن مصرفی (حدوداً): 0</div>
+
+<div id="chat-container">
+  <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
+  <div id="loadingIndicator" aria-label="در حال بارگذاری..." role="status"></div>
+</div>
+
+<div id="inputArea">
+  <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
+   <div>&nbsp;</div>
+  <button id="sendBtn" disabled>ارسال</button>
+  <button id="newChatBtn">گفتگوی جدید</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  const chatDiv = document.getElementById('chat');
+  const inputMsg = document.getElementById('inputMsg');
+  const sendBtn = document.getElementById('sendBtn');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  const modelSelect = document.getElementById('modelSelect');
+  const tokenDisplay = document.getElementById('tokenDisplay');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
+
+  // بارگذاری مدل‌ها
+  const modelList = [
+    "whisper-1",
+    "gpt-4o-mini (پیش‌فرض)",
+    "gpt-4o",
+    "gpt-4.1-nano",
+    "gpt-4.1-mini",
+    "gpt-4.1",
+    "o3-mini-high",
+    "gpt-4o-audio-preview",
+    "o3-mini",
+    "o3",
+    "o3-mini-low",
+    "o1",
+    "o1-mini",
+    "o4-mini",
+    "gpt-4.5-preview",
+    "chatgpt-4o-latest",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-pro-exp-03-25",
+    "gemini-2.0-flash-lite-preview",
+    "gemini-2.0-flash",
+    "deepseek-reasoner",
+    "deepseek-chat",
+    "claude-3-7-sonnet-20250219-thinking",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-7-sonnet-20250219"
+  ];
+
+  const models = modelList.map(item => {
+    if(item.includes('(پیش‌فرض)')) {
+      return { value: item.replace(' (پیش‌فرض)', ''), label: item };
+    }
+    return { value: item, label: item };
+  });
+
+  models.forEach(model => {
+    const opt = document.createElement('option');
+    opt.value = model.value;
+    opt.textContent = model.label;
+    if(model.value === 'gpt-4o-mini') opt.selected = true;
+    modelSelect.appendChild(opt);
+  });
+
+  // بارگذاری تاریخچه چت از localStorage
+  let qaPairs = JSON.parse(localStorage.getItem("qaPairs")) || [];
+
+  function countTokens(text) {
+    return Math.ceil(text.length / 4);
+  }
+
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
+  function updateTokenDisplay(inputTokens, outputTokens) {
+    tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
+  }
+
+  function clearChat() {
+    chatDiv.innerHTML = "";
+  }
+
+  function renderChat() {
+    clearChat();
+    // نمایش سوال‌ها و جواب‌ها از قدیمی به جدید (بالا به پایین)
+    for(let i = 0; i < qaPairs.length; i++) {
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'chat-block';
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      const userContent = document.createElement('div');
+      userContent.classList.add('message-content');
+      userContent.textContent = qaPairs[i].user;
+      userMsg.appendChild(userContent);
+      const userTime = document.createElement('div');
+      userTime.className = 'timestamp';
+      userTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      userMsg.appendChild(userTime);
+
+      const assistantMsg = document.createElement('div');
+      assistantMsg.className = 'message assistant';
+      const assistantContent = document.createElement('div');
+      assistantContent.classList.add('message-content');
+      assistantContent.innerHTML = marked.parse(qaPairs[i].assistant);
+      assistantMsg.appendChild(assistantContent);
+      const assistantTime = document.createElement('div');
+      assistantTime.className = 'timestamp';
+      assistantTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      assistantMsg.appendChild(assistantTime);
+
+      blockDiv.appendChild(userMsg);
+      blockDiv.appendChild(assistantMsg);
+
+      chatDiv.appendChild(blockDiv);
+    }
+
+    if(qaPairs.length > 0) {
+      // اسکرول به سوال جدید (آخرین سوال)
+      const lastBlock = chatDiv.lastChild;
+      if(lastBlock){
+        const userMsg = lastBlock.querySelector('.user');
+        if(userMsg){
+          userMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+  }
+
+  inputMsg.addEventListener('input', () => {
+    sendBtn.disabled = inputMsg.value.trim() === "";
+  });
+
+  async function sendMessage() {
+    const userText = inputMsg.value.trim();
+    if (!userText) return;
+
+    inputMsg.value = "";
+    sendBtn.disabled = true;
+    loadingIndicator.style.display = "block"; // نمایش چرخنده وسط چت
+
+    const MAX_HISTORY = 5;
+
+    try {
+      let messagesToSend = [
+        {role:"system", content:"شما یک فرد خبره هستید و در حال کار با یک دستیار هوشمند می باشید."}
+      ];
+      for(let i = Math.max(qaPairs.length - MAX_HISTORY, 0); i < qaPairs.length; i++) {
+        messagesToSend.push({role: "user", content: qaPairs[i].user});
+        messagesToSend.push({role: "assistant", content: qaPairs[i].assistant});
+      }
+      messagesToSend.push({role: "user", content: userText});
+
+      totalInputTokens += countTokens(userText);
+      updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelSelect.value,
+          conversation: messagesToSend
+        })
+      });
+
+      if (!response.ok) throw new Error("خطا در پاسخ سرور");
+      const data = await response.json();
+
+      if(data.answer){
+        totalOutputTokens += countTokens(data.answer);
+        updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
+        qaPairs.push({user: userText, assistant: data.answer});
+        localStorage.setItem("qaPairs", JSON.stringify(qaPairs));  // ذخیره در localStorage
+        renderChat();
+      } else {
+        alert("پاسخ نامعتبر از سرور دریافت شد.");
+      }
+    } catch(e) {
+      alert("خطا در ارتباط با سرور");
+      console.error(e);
+    } finally {
+      sendBtn.disabled = false;
+      loadingIndicator.style.display = "none"; // مخفی کردن چرخنده
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  inputMsg.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      if (!sendBtn.disabled) sendMessage();
+    }
+  });
+
+  // دکمه چت جدید
+  newChatBtn.addEventListener('click', () => {
+    const confirmNewChat = confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟ این کار تمامی سوابق چت را پاک خواهد کرد.");
+    if(confirmNewChat) {
+      qaPairs = [];
+      chatDiv.innerHTML = "";  // پاک کردن چت
+      totalInputTokens = 0;
+      totalOutputTokens = 0;
+      updateTokenDisplay(totalInputTokens, totalOutputTokens);
+      localStorage.removeItem("qaPairs"); // پاک کردن سابقه از localStorage
+    }
+  });
+
+  renderChat();  // بارگذاری چت از localStorage
+</script>
+
+</body>
+</html>
