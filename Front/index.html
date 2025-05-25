@@ -10,7 +10,6 @@
       font-family: 'IranSans';
       src: url('Fonts/irsans.ttf') format('truetype');
     }
-
     body {
       font-family: 'IranSans', Tahoma, sans-serif;
       background-color: #f5f7fa;
@@ -19,14 +18,24 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      direction: rtl;         /* راست چین کردن کل صفحه */
-      text-align: right;      /* متن راست چین */
+      direction: rtl;
+      text-align: right;
     }
     header {
       background-color: #007bff;
       color: white;
       padding: 15px;
       font-size: 1.5rem;
+      user-select: none;
+    }
+    #tokenCount {
+      background: #e0e0e0;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      color: #333;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+      direction: ltr;
       user-select: none;
     }
     #chat {
@@ -37,7 +46,7 @@
       flex-direction: column;
       scrollbar-width: thin;
       scrollbar-color: #007bff #e0e0e0;
-      text-align: right;  /* راست چین کردن پیام‌ها */
+      text-align: right;
     }
     #chat::-webkit-scrollbar {
       width: 8px;
@@ -49,18 +58,15 @@
       background-color: #007bff;
       border-radius: 10px;
     }
-
     .message {
       max-width: 70%;
       margin: 8px 0;
       padding: 12px 16px;
       border-radius: 12px;
-      position: relative;
-      word-wrap: break-word;
-      white-space: pre-wrap;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       line-height: 1.3;
-      /* متن داخل پیام راست چین */
+      word-wrap: break-word;
+      white-space: pre-wrap;
       text-align: right;
     }
     .user {
@@ -77,9 +83,8 @@
       font-size: 0.65rem;
       color: #666;
       margin-top: 4px;
-      user-select: none;
-      /* راست چین بودن timestamp */
       text-align: right;
+      user-select: none;
     }
     #inputArea {
       display: flex;
@@ -87,7 +92,7 @@
       background-color: #fff;
       border-top: 1px solid #ccc;
       align-items: center;
-      direction: rtl; /* راست چین کردن ورودی‌ها */
+      direction: rtl;
     }
     #inputMsg {
       flex-grow: 1;
@@ -134,104 +139,21 @@
       border-radius: 6px;
       font-family: inherit;
       cursor: pointer;
-      direction: ltr; /* مدل‌ها انگلیسی و چپ‌چین */
+      direction: ltr;
       text-align: left;
     }
-
-    /* Markdown styling with controlled spacing */
-
     .message-content {
       font-size: 0.85rem;
       line-height: 1.3;
       color: inherit;
       text-align: right;
     }
-
-    .message-content p {
-      margin-top: 0;
-      margin-bottom: 0.3em;
-      line-height: 1.3;
-    }
-
-    .message-content ul, .message-content ol {
-      margin-top: 0;
-      margin-bottom: 0.3em;
-      padding-left: 1.3em;
-      text-align: right;
-    }
-
-    .message-content li {
-      margin-top: 0;
-      margin-bottom: 0;
-      line-height: 1.3;
-      text-align: right;
-    }
-
-    .message-content h1,
-    .message-content h2,
-    .message-content h3,
-    .message-content h4,
-    .message-content h5,
-    .message-content h6 {
-      margin-top: 0.3em;
-      margin-bottom: 0.3em;
-      line-height: 1.2;
-      text-align: right;
-    }
-
-    .message-content blockquote {
-      margin-top: 0;
-      margin-bottom: 0.3em;
-      padding-left: 8px;
-      line-height: 1.3;
-      color: #555;
-      font-style: italic;
-      background-color: #f9faff;
-      border-left: 4px solid #007bff;
-      border-radius: 4px;
-      text-align: right;
-    }
-
-    .message-content pre {
-      background-color: #f0f0f0;
-      border-radius: 6px;
-      padding: 8px 12px;
-      overflow-x: auto;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.85rem;
-      margin: 0.4em 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
-      direction: ltr; /* کدها چپ‌چین */
-      text-align: left;
-    }
-
-    .message-content code {
-      background-color: #e8e8e8;
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.85rem;
-      direction: ltr; /* کدها چپ‌چین */
-      text-align: left;
-    }
-
-    .message-content a {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .message-content a:hover {
-      text-decoration: underline;
-    }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
 <header>چت پیشرفته دستیار سلامت</header>
+<div id="tokenCount">تعداد توکن مصرفی: 0</div>
 
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
@@ -244,75 +166,51 @@
   <button id="sendBtn" disabled>ارسال</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/gpt-3-encoder@1.1.4/dist/gpt-3-encoder.min.js"></script>
 <script>
   const chatDiv = document.getElementById('chat');
   const inputMsg = document.getElementById('inputMsg');
   const sendBtn = document.getElementById('sendBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
   const modelSelect = document.getElementById('modelSelect');
+  const tokenCountDiv = document.getElementById('tokenCount');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
-  const modelList = [
-    "whisper-1", "gpt-4o-mini", "gpt-4o", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1",
-    "o3-mini-high", "gpt-4o-audio-preview", "o3-mini", "o3", "o3-mini-low",
-    "o1", "o1-mini", "o4-mini", "gpt-4.5-preview", "chatgpt-4o-latest",
-    "gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-exp-03-25",
-    "gemini-2.0-flash-lite-preview", "gemini-2.0-flash",
-    "deepseek-reasoner", "deepseek-chat",
-    "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
+  // آرایه ذخیره سابقه پیام‌ها
+  let conversation = [
+    {
+      role: "system",
+      content: "شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."
+    }
   ];
 
-  modelList.forEach(model => {
-    if (model !== "gpt-4o") {
-      const opt = document.createElement('option');
-      opt.value = model;
-      opt.textContent = model;
-      modelSelect.appendChild(opt);
+  // تابع شمارش توکن‌ها با gpt-3-encoder
+  function countTokens(text) {
+    const encoded = GPT3Encoder.encode(text);
+    return encoded.length;
+  }
+
+  // محاسبه تعداد توکن‌های کل conversation ورودی
+  function calculateTokens(messages) {
+    let total = 0;
+    for (const msg of messages) {
+      total += countTokens(msg.content);
     }
-  });
-
-  const savedModel = localStorage.getItem('selected_model');
-  if (savedModel && modelList.includes(savedModel)) {
-    modelSelect.value = savedModel;
+    return total;
   }
 
-  modelSelect.addEventListener('change', () => {
-    localStorage.setItem('selected_model', modelSelect.value);
-  });
-
-  function loadChatHistory() {
-    const history = localStorage.getItem('chat_history');
-    if (!history) return;
-    const messages = JSON.parse(history);
-    const lastMessages = messages.slice(-3);
-    lastMessages.forEach(({role, text, timestamp}) => {
-      appendMessage(text, role, timestamp);
-    });
-  }
-
-  function saveMessage(role, text, timestamp) {
-    let history = localStorage.getItem('chat_history');
-    history = history ? JSON.parse(history) : [];
-    history.push({role, text, timestamp});
-    const trimmed = history.slice(-50);
-    localStorage.setItem('chat_history', JSON.stringify(trimmed));
-  }
-
-  // حذف خطوط خالی پشت سر هم بیشتر از یک خط
-  function cleanText(text) {
-    return text.replace(/(\n\s*){2,}/g, '\n\n');
+  // به‌روزرسانی نمایش تعداد توکن
+  function updateTokenCount(inputTokens, outputTokens = 0) {
+    tokenCountDiv.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | کل: ${inputTokens + outputTokens}`;
   }
 
   function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
 
-    const clean = cleanText(text);
-    const messageHtml = marked.parse(clean);
-
     const messageText = document.createElement('div');
     messageText.classList.add('message-content');
-    messageText.innerHTML = messageHtml;
+    messageText.textContent = text;
 
     const timeDiv = document.createElement('div');
     timeDiv.className = 'timestamp';
@@ -327,8 +225,6 @@
     chatDiv.appendChild(msgDiv);
 
     chatDiv.scrollTop = chatDiv.scrollHeight;
-
-    saveMessage(role, text, timestamp);
   }
 
   inputMsg.addEventListener('input', () => {
@@ -338,22 +234,44 @@
   async function sendMessage() {
     const text = inputMsg.value.trim();
     if (!text) return;
+
+    conversation.push({ role: "user", content: text });
     appendMessage(text, "user");
-    inputMsg.value = '';
+
+    inputMsg.value = "";
     sendBtn.disabled = true;
     loadingSpinner.style.display = "inline-block";
+
+    const MAX_HISTORY = 5;
+    const messagesToSend = [
+      conversation[0],  // پیام سیستم
+      ...conversation.slice(-MAX_HISTORY)
+    ];
+
+    // محاسبه توکن ورودی فعلی و نمایش اولیه (قبل از دریافت پاسخ)
+    const inputTokens = calculateTokens(messagesToSend);
+    updateTokenCount(inputTokens, 0);
 
     try {
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, model: modelSelect.value })
+        body: JSON.stringify({
+          model: modelSelect.value,
+          conversation: messagesToSend
+        })
       });
+
       if (!response.ok) throw new Error("خطا در پاسخ سرور");
       const data = await response.json();
 
       if (data.answer) {
+        conversation.push({ role: "assistant", content: data.answer });
         appendMessage(data.answer, "assistant");
+
+        // محاسبه توکن پاسخ (تقریبی)
+        const outputTokens = countTokens(data.answer);
+        updateTokenCount(inputTokens, outputTokens);
       } else {
         appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
       }
@@ -367,11 +285,30 @@
   }
 
   sendBtn.addEventListener('click', sendMessage);
-  inputMsg.addEventListener('keypress', function(e) {
+  inputMsg.addEventListener('keypress', e => {
     if (e.key === 'Enter' && !sendBtn.disabled) {
       sendMessage();
     }
   });
+
+  // بارگذاری سابقه (در صورت نیاز)
+  function loadChatHistory() {
+    const history = localStorage.getItem('chat_history');
+    if (!history) return;
+    const messages = JSON.parse(history);
+    messages.forEach(({ role, content, timestamp }) => {
+      appendMessage(content, role, timestamp);
+    });
+    conversation = messages.length ? messages : conversation;
+  }
+
+  // ذخیره سابقه (اختیاری)
+  function saveChatHistory() {
+    localStorage.setItem('chat_history', JSON.stringify(conversation));
+  }
+
+  const observer = new MutationObserver(saveChatHistory);
+  observer.observe(chatDiv, { childList: true });
 
   loadChatHistory();
 </script>
