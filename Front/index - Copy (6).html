@@ -48,6 +48,8 @@
       position: relative;
       overflow-y: auto;
       padding-bottom: 80px; /* فضای اضافی برای ثابت بودن باکس ورودی */
+      display: flex;
+      flex-direction: column-reverse;
     }
 
     #chat {
@@ -114,7 +116,7 @@
 
     #loadingIndicator {
       display: none;
-      position: fixed;
+      position: fixed;  /* تغییر به fixed */
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -162,7 +164,7 @@
       font-family: 'IranSans', Tahoma, sans-serif;
     }
 
-    #sendBtn, #newChatBtn {
+    #sendBtn {
       padding: 0 20px;
       margin-left: 10px;
       font-size: 1rem;
@@ -175,7 +177,7 @@
       height: 40px;
     }
 
-    #sendBtn:disabled, #newChatBtn:disabled {
+    #sendBtn:disabled {
       background-color: #a0c7ff;
       cursor: not-allowed;
     }
@@ -197,6 +199,7 @@
       text-align: right;
     }
 
+    /* کمبوباکس و دکمه‌ها بالای صفحه */
     #headerContent {
       display: flex;
       align-items: center;
@@ -230,9 +233,6 @@
         font-size: 0.8rem;
         padding: 5px 10px;
       }
-      #chat-container {
-        padding-bottom: 50px;
-      }
     }
 
   </style>
@@ -254,7 +254,6 @@
 <div id="inputArea">
   <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
   <button id="sendBtn" disabled>ارسال</button>
-  <button id="newChatBtn">چت جدید</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -265,7 +264,6 @@
   const loadingIndicator = document.getElementById('loadingIndicator');
   const modelSelect = document.getElementById('modelSelect');
   const tokenDisplay = document.getElementById('tokenDisplay');
-  const newChatBtn = document.getElementById('newChatBtn');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
   const modelList = [
@@ -438,18 +436,6 @@
     if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
       e.preventDefault();
       if (!sendBtn.disabled) sendMessage();
-    }
-  });
-
-  // دکمه چت جدید
-  newChatBtn.addEventListener('click', () => {
-    const confirmNewChat = confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟ این کار تمامی سوابق چت را پاک خواهد کرد.");
-    if(confirmNewChat) {
-      qaPairs = [];
-      chatDiv.innerHTML = "";  // پاک کردن چت
-      totalInputTokens = 0;
-      totalOutputTokens = 0;
-      updateTokenDisplay(totalInputTokens, totalOutputTokens);
     }
   });
 </script>
