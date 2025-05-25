@@ -28,16 +28,6 @@
       font-size: 1.5rem;
       user-select: none;
     }
-    #tokenCount {
-      background: #e0e0e0;
-      padding: 8px 15px;
-      font-size: 0.9rem;
-      color: #333;
-      border-bottom: 1px solid #ccc;
-      text-align: left;
-      direction: ltr;
-      user-select: none;
-    }
     #chat {
       flex-grow: 1;
       overflow-y: auto;
@@ -153,7 +143,6 @@
 <body>
 
 <header>چت پیشرفته دستیار سلامت</header>
-<div id="tokenCount">تعداد توکن مصرفی: 0</div>
 
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
@@ -172,33 +161,15 @@
   const sendBtn = document.getElementById('sendBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
   const modelSelect = document.getElementById('modelSelect');
-  const tokenCountDiv = document.getElementById('tokenCount');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
+  // آرایه ذخیره سابقه پیام‌ها
   let conversation = [
     {
       role: "system",
       content: "شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."
     }
   ];
-
-  // تابع تخمینی شمارش توکن: هر 4 کاراکتر = 1 توکن
-  function countTokens(text) {
-    return Math.ceil(text.length / 4);
-  }
-
-  // محاسبه توکن کل پیام‌ها
-  function calculateTokens(messages) {
-    let total = 0;
-    for (const msg of messages) {
-      total += countTokens(msg.content);
-    }
-    return total;
-  }
-
-  function updateTokenCount(inputTokens, outputTokens = 0) {
-    tokenCountDiv.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | کل: ${inputTokens + outputTokens}`;
-  }
 
   function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
@@ -240,12 +211,9 @@
 
     const MAX_HISTORY = 5;
     const messagesToSend = [
-      conversation[0],
+      conversation[0], // پیام system فقط یکبار
       ...conversation.slice(-MAX_HISTORY)
     ];
-
-    const inputTokens = calculateTokens(messagesToSend);
-    updateTokenCount(inputTokens, 0);
 
     try {
       const response = await fetch(apiUrl, {
@@ -263,9 +231,6 @@
       if (data.answer) {
         conversation.push({ role: "assistant", content: data.answer });
         appendMessage(data.answer, "assistant");
-
-        const outputTokens = countTokens(data.answer);
-        updateTokenCount(inputTokens, outputTokens);
       } else {
         appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
       }
@@ -284,9 +249,6 @@
       sendMessage();
     }
   });
-
-  // اگر لازم دارید می‌توانید اینجا کد ذخیره و بارگذاری سابقه چت با localStorage را اضافه کنید
-
 </script>
 
 </body>
