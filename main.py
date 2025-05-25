@@ -50,5 +50,4 @@ async def root():
     return {"message": "سلام! سرویس سلامت در حال اجرا است."}
 
 if __name__ == "__main__":
-    port = 8080
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

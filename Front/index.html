@@ -37,6 +37,7 @@
       scrollbar-width: thin;
       scrollbar-color: #007bff #e0e0e0;
       text-align: right;
+      background: white;
     }
     #chat::-webkit-scrollbar {
       width: 8px;
@@ -58,6 +59,8 @@
       word-wrap: break-word;
       white-space: pre-wrap;
       text-align: right;
+      background: #e2ffe2;
+      color: #1b4332;
     }
     .user {
       align-self: flex-end;
@@ -66,8 +69,6 @@
     }
     .assistant {
       align-self: flex-start;
-      background-color: #e2ffe2;
-      color: #1b4332;
     }
     .timestamp {
       font-size: 0.65rem;
@@ -91,8 +92,12 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       outline: none;
+      resize: vertical;
+      min-height: 40px;
+      max-height: 120px;
       direction: rtl;
       text-align: right;
+      font-family: 'IranSans', Tahoma, sans-serif;
     }
     #sendBtn {
       padding: 0 20px;
@@ -104,6 +109,7 @@
       border-radius: 6px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      height: 40px;
     }
     #sendBtn:disabled {
       background-color: #a0c7ff;
@@ -150,10 +156,12 @@
   <select id="modelSelect" aria-label="انتخاب مدل هوش مصنوعی">
     <option value="gpt-4o">gpt-4o (پیش‌فرض)</option>
   </select>
-  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" aria-label="متن پیام" />
+  <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
   <div id="loadingSpinner" role="status" aria-live="assertive" aria-label="در حال ارسال..."></div>
   <button id="sendBtn" disabled>ارسال</button>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <script>
   const chatDiv = document.getElementById('chat');
@@ -163,7 +171,6 @@
   const modelSelect = document.getElementById('modelSelect');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
-  // آرایه ذخیره سابقه پیام‌ها
   let conversation = [
     {
       role: "system",
@@ -177,7 +184,7 @@
 
     const messageText = document.createElement('div');
     messageText.classList.add('message-content');
-    messageText.textContent = text;
+    messageText.innerHTML = marked.parse(text);
 
     const timeDiv = document.createElement('div');
     timeDiv.className = 'timestamp';
@@ -211,9 +218,11 @@
 
     const MAX_HISTORY = 5;
     const messagesToSend = [
-      conversation[0], // پیام system فقط یکبار
+      conversation[0],
       ...conversation.slice(-MAX_HISTORY)
     ];
+
+    console.log("ارسال به سرور:", messagesToSend);
 
     try {
       const response = await fetch(apiUrl, {
@@ -244,9 +253,10 @@
   }
 
   sendBtn.addEventListener('click', sendMessage);
-  inputMsg.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !sendBtn.disabled) {
-      sendMessage();
+  inputMsg.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      if (!sendBtn.disabled) sendMessage();
     }
   });
 </script>
