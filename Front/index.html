@@ -19,12 +19,13 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
+      direction: rtl;         /* راست چین کردن کل صفحه */
+      text-align: right;      /* متن راست چین */
     }
     header {
       background-color: #007bff;
       color: white;
       padding: 15px;
-      text-align: center;
       font-size: 1.5rem;
       user-select: none;
     }
@@ -36,6 +37,7 @@
       flex-direction: column;
       scrollbar-width: thin;
       scrollbar-color: #007bff #e0e0e0;
+      text-align: right;  /* راست چین کردن پیام‌ها */
     }
     #chat::-webkit-scrollbar {
       width: 8px;
@@ -58,6 +60,8 @@
       white-space: pre-wrap;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       line-height: 1.3;
+      /* متن داخل پیام راست چین */
+      text-align: right;
     }
     .user {
       align-self: flex-end;
@@ -73,8 +77,9 @@
       font-size: 0.65rem;
       color: #666;
       margin-top: 4px;
-      text-align: right;
       user-select: none;
+      /* راست چین بودن timestamp */
+      text-align: right;
     }
     #inputArea {
       display: flex;
@@ -82,6 +87,7 @@
       background-color: #fff;
       border-top: 1px solid #ccc;
       align-items: center;
+      direction: rtl; /* راست چین کردن ورودی‌ها */
     }
     #inputMsg {
       flex-grow: 1;
@@ -91,6 +97,7 @@
       border-radius: 6px;
       outline: none;
       direction: rtl;
+      text-align: right;
     }
     #sendBtn {
       padding: 0 20px;
@@ -127,6 +134,8 @@
       border-radius: 6px;
       font-family: inherit;
       cursor: pointer;
+      direction: ltr; /* مدل‌ها انگلیسی و چپ‌چین */
+      text-align: left;
     }
 
     /* Markdown styling with controlled spacing */
@@ -135,6 +144,7 @@
       font-size: 0.85rem;
       line-height: 1.3;
       color: inherit;
+      text-align: right;
     }
 
     .message-content p {
@@ -147,12 +157,14 @@
       margin-top: 0;
       margin-bottom: 0.3em;
       padding-left: 1.3em;
+      text-align: right;
     }
 
     .message-content li {
       margin-top: 0;
       margin-bottom: 0;
       line-height: 1.3;
+      text-align: right;
     }
 
     .message-content h1,
@@ -164,6 +176,7 @@
       margin-top: 0.3em;
       margin-bottom: 0.3em;
       line-height: 1.2;
+      text-align: right;
     }
 
     .message-content blockquote {
@@ -176,6 +189,7 @@
       background-color: #f9faff;
       border-left: 4px solid #007bff;
       border-radius: 4px;
+      text-align: right;
     }
 
     .message-content pre {
@@ -189,6 +203,8 @@
       white-space: pre-wrap;
       word-break: break-word;
       box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+      direction: ltr; /* کدها چپ‌چین */
+      text-align: left;
     }
 
     .message-content code {
@@ -197,6 +213,8 @@
       border-radius: 4px;
       font-family: 'Courier New', Courier, monospace;
       font-size: 0.85rem;
+      direction: ltr; /* کدها چپ‌چین */
+      text-align: left;
     }
 
     .message-content a {
