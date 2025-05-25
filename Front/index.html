@@ -122,7 +122,6 @@
   const sendBtn = document.getElementById('sendBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
   const modelSelect = document.getElementById('modelSelect');
-
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
   const modelList = [
@@ -135,7 +134,6 @@
     "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
   ];
 
-  // Populate model select
   modelList.forEach(model => {
     if (model !== "gpt-4o") {
       const opt = document.createElement('option');
@@ -145,7 +143,6 @@
     }
   });
 
-  // Load selected model from localStorage
   const savedModel = localStorage.getItem('selected_model');
   if (savedModel && modelList.includes(savedModel)) {
     modelSelect.value = savedModel;
@@ -159,7 +156,8 @@
     const history = localStorage.getItem('chat_history');
     if (!history) return;
     const messages = JSON.parse(history);
-    messages.forEach(({role, text, timestamp}) => {
+    const lastMessages = messages.slice(-3); // فقط ۳ پیام آخر
+    lastMessages.forEach(({role, text, timestamp}) => {
       appendMessage(text, role, timestamp);
     });
   }
@@ -168,7 +166,8 @@
     let history = localStorage.getItem('chat_history');
     history = history ? JSON.parse(history) : [];
     history.push({role, text, timestamp});
-    localStorage.setItem('chat_history', JSON.stringify(history));
+    const trimmed = history.slice(-50); // فقط ۵۰ پیام آخر ذخیره شود
+    localStorage.setItem('chat_history', JSON.stringify(trimmed));
   }
 
   function appendMessage(text, role, timestamp = null) {
