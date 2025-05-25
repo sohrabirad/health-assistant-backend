@@ -19,6 +19,7 @@
     flex-direction: column;
     direction: rtl;
     text-align: right;
+    overflow: hidden; /* جلوگیری از اسکرول کردن صفحه */
   }
   header {
     background-color: #007bff;
@@ -40,6 +41,7 @@
   #chat-container {
     flex-grow: 1;
     position: relative;
+    padding-bottom: 60px; /* فضای اضافی برای ثابت بودن باکس ورودی */
   }
   #chat {
     height: 100%;
@@ -121,6 +123,11 @@
     border-top: 1px solid #ccc;
     align-items: center;
     direction: rtl;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
   }
   #inputMsg {
     flex-grow: 1;
