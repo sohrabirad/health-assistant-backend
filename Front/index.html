@@ -212,7 +212,6 @@
     "claude-3-7-sonnet-20250219"
   ];
 
-  // مدل‌های value و label جداگانه
   const models = modelList.map(item => {
     if(item.includes('(پیش‌فرض)')) {
       return { value: item.replace(' (پیش‌فرض)', ''), label: item };
@@ -220,7 +219,6 @@
     return { value: item, label: item };
   });
 
-  // پر کردن کمبوباکس مدل‌ها
   models.forEach(model => {
     const opt = document.createElement('option');
     opt.value = model.value;
@@ -229,10 +227,8 @@
     modelSelect.appendChild(opt);
   });
 
-  // نگهداری جفت سوال-جواب‌ها
   let qaPairs = [];
 
-  // شمارش توکن تقریبی: هر ۴ کاراکتر = ۱ توکن
   function countTokens(text) {
     return Math.ceil(text.length / 4);
   }
@@ -244,14 +240,13 @@
     tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
   }
 
-  // حذف تمام پیام‌های موجود
   function clearChat() {
     chatDiv.innerHTML = "";
   }
 
-  // رندر کل پیام‌ها با ترتیب جدیدترین ابتدا و اسکرول روی سوال جدید
   function renderChat() {
     clearChat();
+    // ترتیب: جدیدترین جفت در بالا، قدیمی تر پایین
     for(let i = qaPairs.length - 1; i >= 0; i--) {
       const blockDiv = document.createElement('div');
       blockDiv.className = 'chat-block';
@@ -284,7 +279,7 @@
       chatDiv.appendChild(blockDiv);
 
       if(i === qaPairs.length - 1){
-        // اسکرول به سوال جدید (اولین بلوک)
+        // اسکرول به سوال جدید (جدیدترین جفت)
         userMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
@@ -305,7 +300,7 @@
     const MAX_HISTORY = 5;
 
     try {
-      // پیام‌های گذشته: پیام سیستم + ۵ جفت پیام آخر
+      // پیام سیستم + ۵ جفت آخر
       let messagesToSend = [
         {role:"system", content:"شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."}
       ];
@@ -315,7 +310,6 @@
       }
       messagesToSend.push({role: "user", content: userText});
 
-      // توکن ورودی پیام جدید
       totalInputTokens += countTokens(userText);
       updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
@@ -335,7 +329,6 @@
         totalOutputTokens += countTokens(data.answer);
         updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
-        // اضافه کردن جفت جدید و رندر کل چت
         qaPairs.push({user: userText, assistant: data.answer});
         renderChat();
       } else {
