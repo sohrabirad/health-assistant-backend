@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>چت پیشرفته دستیار سلامت</title>
+  <title>دستیار هوش مصنوعی پویان (نسخه 1.07)</title>
   <style>
     @font-face {
       font-family: 'IranSans';
@@ -397,7 +397,7 @@
 
     try {
       let messagesToSend = [
-        {role:"system", content:"شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."}
+        {role:"system", content:"شما یک فرد خبره هستید و در حال کار با یک دستیار هوشمند می باشید."}
       ];
       for(let i = Math.max(qaPairs.length - MAX_HISTORY, 0); i < qaPairs.length; i++) {
         messagesToSend.push({role: "user", content: qaPairs[i].user});
