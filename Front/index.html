@@ -24,6 +24,7 @@
 
 <div id="inputArea">
   <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
+  <!-- اضافه کردن ورودی فایل -->
   <input type="file" id="fileInput" accept=".txt, .pdf" />
   <div>&nbsp;</div>
   <button id="sendBtn" disabled>ارسال</button>
@@ -39,7 +40,7 @@
   const modelSelect = document.getElementById('modelSelect');
   const tokenDisplay = document.getElementById('tokenDisplay');
   const newChatBtn = document.getElementById('newChatBtn');
-  const apiUrl = "http://localhost:8080/chat";  // آدرس بک‌اند خود را وارد کنید
+  const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat"; // تغییر آدرس به سرور واقعی
 
   // بارگذاری مدل‌ها
   const modelList = [
@@ -70,15 +71,91 @@
     "claude-3-7-sonnet-20250219"
   ];
 
-  modelList.forEach(model => {
+  const models = modelList.map(item => {
+    if(item.includes('(پیش‌فرض)')) {
+      return { value: item.replace(' (پیش‌فرض)', ''), label: item };
+    }
+    return { value: item, label: item };
+  });
+
+  models.forEach(model => {
     const opt = document.createElement('option');
-    opt.value = model;
-    opt.textContent = model;
-    if (model === 'gpt-4o-mini') opt.selected = true;
+    opt.value = model.value;
+    opt.textContent = model.label;
+    if(model.value === 'gpt-4o-mini') opt.selected = true;
     modelSelect.appendChild(opt);
   });
 
-  // ارسال پیام
+  // بارگذاری تاریخچه چت از localStorage
+  let qaPairs = JSON.parse(localStorage.getItem("qaPairs")) || [];
+
+  function countTokens(text) {
+    return Math.ceil(text.length / 4);
+  }
+
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
+  function updateTokenDisplay(inputTokens, outputTokens) {
+    tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
+  }
+
+  function clearChat() {
+    chatDiv.innerHTML = "";
+  }
+
+  function renderChat() {
+    clearChat();
+    // نمایش سوال‌ها و جواب‌ها از قدیمی به جدید (بالا به پایین)
+    for(let i = 0; i < qaPairs.length; i++) {
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'chat-block';
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      const userContent = document.createElement('div');
+      userContent.classList.add('message-content');
+      userContent.textContent = qaPairs[i].user;
+      userMsg.appendChild(userContent);
+      const userTime = document.createElement('div');
+      userTime.className = 'timestamp';
+      userTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      userMsg.appendChild(userTime);
+
+      const assistantMsg = document.createElement('div');
+      assistantMsg.className = 'message assistant';
+      const assistantContent = document.createElement('div');
+      assistantContent.classList.add('message-content');
+      assistantContent.innerHTML = marked.parse(qaPairs[i].assistant);
+      assistantMsg.appendChild(assistantContent);
+      const assistantTime = document.createElement('div');
+      assistantTime.className = 'timestamp';
+      assistantTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      assistantMsg.appendChild(assistantTime);
+
+      blockDiv.appendChild(userMsg);
+      blockDiv.appendChild(assistantMsg);
+
+      chatDiv.appendChild(blockDiv);
+    }
+
+    if(qaPairs.length > 0) {
+      // اسکرول به سوال جدید (آخرین سوال)
+      const lastBlock = chatDiv.lastChild;
+      if(lastBlock){
+        const userMsg = lastBlock.querySelector('.user');
+        if(userMsg){
+          userMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+  }
+
+  inputMsg.addEventListener('input', () => {
+    sendBtn.disabled = inputMsg.value.trim() === "";
+  });
+
+  // ارسال پیام همراه با فایل
   async function sendMessage() {
     const userText = inputMsg.value.trim();
     const fileInput = document.getElementById('fileInput');
@@ -92,8 +169,8 @@
 
     const formData = new FormData();
     formData.append('model', modelSelect.value);
-    if (file) formData.append('file', file);
     formData.append('conversation', JSON.stringify([{ role: "user", content: userText }]));
+    if (file) formData.append('file', file); // اضافه کردن فایل به FormData
 
     try {
       const response = await fetch(apiUrl, {
@@ -105,7 +182,12 @@
       const data = await response.json();
 
       if (data.answer) {
-        chatDiv.innerHTML += `<div><strong>مدل:</strong> ${data.answer}</div>`;
+        totalOutputTokens += countTokens(data.answer);
+        updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
+        qaPairs.push({ user: userText, assistant: data.answer });
+        localStorage.setItem("qaPairs", JSON.stringify(qaPairs));  // ذخیره در localStorage
+        renderChat();
       } else {
         alert("پاسخ نامعتبر از سرور دریافت شد.");
       }
@@ -129,10 +211,13 @@
 
   newChatBtn.addEventListener('click', () => {
     if (confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟")) {
-      chatDiv.innerHTML = "";
+      qaPairs = [];
+      chatDiv.innerHTML = "";  // پاک کردن چت
       inputMsg.value = "";
     }
   });
+
+  renderChat();  // بارگذاری چت از localStorage
 </script>
 
 </body>

@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 import uvicorn
 from io import BytesIO
@@ -25,6 +26,9 @@ if not api_key:
 # OpenAI Client
 client = OpenAI(base_url='https://api.gapgpt.app/v1', api_key=api_key)
 
+# بارگذاری فایل‌های استاتیک (در صورتی که نیاز به نمایش فایل‌ها باشد)
+app.mount("/static", StaticFiles(directory="Front"), name="static")
+
 # چت با مدل
 @app.post("/chat")
 async def chat_endpoint(request: Request, file: UploadFile = File(None)):
@@ -32,7 +36,7 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
     data = await request.json()
     conversation = data.get("conversation")
     model = data.get("model", "gpt-4o")
-    
+
     # اگر فایل ارسال شده باشد
     if file:
         file_content = await file.read()
@@ -43,6 +47,7 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
             # فرض می‌کنیم که فایل متنی است
             text = file_content.decode('utf-8')
         
+        # اضافه کردن محتوای فایل به مکالمه
         conversation.append({"role": "user", "content": text})
 
     # اگر conversation موجود نباشد، یک مقدار پیش‌فرض قرار می‌دهیم
@@ -50,7 +55,8 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
         conversation = [
             {"role": "system", "content": "شما یک فرد خبره هستید و در حال کار با یک دستیار هوشمند می باشید."}
         ]
-    
+
+    # ارسال مکالمه به مدل OpenAI و دریافت پاسخ
     try:
         response = client.chat.completions.create(
             model=model,
@@ -62,6 +68,7 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
     except Exception as e:
         return {"error": f"مشکلی در ارتباط با مدل {model} پیش آمد: {str(e)}"}
 
+# استخراج متن از فایل PDF
 def extract_text_from_pdf(file_content: bytes) -> str:
     """استخراج متن از فایل PDF"""
     pdf_reader = PdfReader(BytesIO(file_content))
@@ -70,9 +77,11 @@ def extract_text_from_pdf(file_content: bytes) -> str:
         text += page.extract_text()
     return text
 
+# روت اصلی
 @app.get("/")
 async def root():
     return {"message": "سلام! سرویس در حال اجرا است."}
 
+# اجرای برنامه
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
