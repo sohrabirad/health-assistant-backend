@@ -130,8 +130,8 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
     }
 
     #inputArea {
@@ -256,9 +256,7 @@
 
 <div id="inputArea">
   <textarea id="inputMsg" placeholder="پیام خود را بنویسید..." aria-label="متن پیام" rows="2" autocomplete="off"></textarea>
-  <!-- ورودی فایل اضافه شده -->
-  <input type="file" id="fileInput" accept=".txt, .pdf" />
-  <div>&nbsp;</div>
+   <div>&nbsp;</div>
   <button id="sendBtn" disabled>ارسال</button>
   <button id="newChatBtn">گفتگوی جدید</button>
 </div>
@@ -389,57 +387,68 @@
 
   async function sendMessage() {
     const userText = inputMsg.value.trim();
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-
-    if (!userText && !file) return;
+    if (!userText) return;
 
     inputMsg.value = "";
     sendBtn.disabled = true;
     loadingIndicator.style.display = "block"; // نمایش چرخنده وسط چت
 
-    const formData = new FormData();
-    formData.append('model', modelSelect.value);
-    formData.append('conversation', JSON.stringify([{ role: "user", content: userText }]));
-    if (file) formData.append('file', file); // اضافه کردن فایل به FormData
+    const MAX_HISTORY = 5;
 
     try {
+      let messagesToSend = [
+        {role:"system", content:"شما یک فرد خبره هستید و در حال کار با یک دستیار هوشمند می باشید."}
+      ];
+      for(let i = Math.max(qaPairs.length - MAX_HISTORY, 0); i < qaPairs.length; i++) {
+        messagesToSend.push({role: "user", content: qaPairs[i].user});
+        messagesToSend.push({role: "assistant", content: qaPairs[i].assistant});
+      }
+      messagesToSend.push({role: "user", content: userText});
+
+      totalInputTokens += countTokens(userText);
+      updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
       const response = await fetch(apiUrl, {
         method: "POST",
-        body: formData
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelSelect.value,
+          conversation: messagesToSend
+        })
       });
 
       if (!response.ok) throw new Error("خطا در پاسخ سرور");
       const data = await response.json();
 
-      if (data.answer) {
+      if(data.answer){
         totalOutputTokens += countTokens(data.answer);
         updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
-        qaPairs.push({ user: userText, assistant: data.answer });
+        qaPairs.push({user: userText, assistant: data.answer});
         localStorage.setItem("qaPairs", JSON.stringify(qaPairs));  // ذخیره در localStorage
         renderChat();
       } else {
         alert("پاسخ نامعتبر از سرور دریافت شد.");
       }
-    } catch (e) {
+    } catch(e) {
       alert("خطا در ارتباط با سرور");
       console.error(e);
     } finally {
       sendBtn.disabled = false;
-      loadingIndicator.style.display = "none";
+      loadingIndicator.style.display = "none"; // مخفی کردن چرخنده
     }
   }
 
   sendBtn.addEventListener('click', sendMessage);
 
   inputMsg.addEventListener('keydown', e => {
-    if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey) {
+    if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
       e.preventDefault();
       if (!sendBtn.disabled) sendMessage();
     }
   });
 
+  // دکمه چت جدید
   newChatBtn.addEventListener('click', () => {
     const confirmNewChat = confirm("آیا مطمئن هستید که می‌خواهید چت جدید شروع کنید؟ این کار تمامی سوابق چت را پاک خواهد کرد.");
     if(confirmNewChat) {
