@@ -212,7 +212,7 @@
     "claude-3-7-sonnet-20250219"
   ];
 
-  // مدل اصلی های جداگانه برای value و label
+  // مدل‌های value و label جداگانه
   const models = modelList.map(item => {
     if(item.includes('(پیش‌فرض)')) {
       return { value: item.replace(' (پیش‌فرض)', ''), label: item };
@@ -229,12 +229,8 @@
     modelSelect.appendChild(opt);
   });
 
-  let conversation = [
-    {
-      role: "system",
-      content: "شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."
-    }
-  ];
+  // نگهداری جفت سوال-جواب‌ها
+  let qaPairs = [];
 
   // شمارش توکن تقریبی: هر ۴ کاراکتر = ۱ توکن
   function countTokens(text) {
@@ -248,50 +244,51 @@
     tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
   }
 
-  // حذف همه پیام‌های چت از DOM
+  // حذف تمام پیام‌های موجود
   function clearChat() {
     chatDiv.innerHTML = "";
   }
 
-  // اضافه کردن یک بلاک شامل سوال و جواب (جفت پیام) به بالا
-  function prependChatBlock(userText, assistantText) {
-    const blockDiv = document.createElement('div');
-    blockDiv.className = 'chat-block';
+  // رندر کل پیام‌ها با ترتیب جدیدترین ابتدا و اسکرول روی سوال جدید
+  function renderChat() {
+    clearChat();
+    for(let i = qaPairs.length - 1; i >= 0; i--) {
+      const blockDiv = document.createElement('div');
+      blockDiv.className = 'chat-block';
 
-    // پیام کاربر
-    const userMsg = document.createElement('div');
-    userMsg.className = 'message user';
-    const userContent = document.createElement('div');
-    userContent.classList.add('message-content');
-    userContent.textContent = userText;
-    userMsg.appendChild(userContent);
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      const userContent = document.createElement('div');
+      userContent.classList.add('message-content');
+      userContent.textContent = qaPairs[i].user;
+      userMsg.appendChild(userContent);
+      const userTime = document.createElement('div');
+      userTime.className = 'timestamp';
+      userTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      userMsg.appendChild(userTime);
 
-    const userTime = document.createElement('div');
-    userTime.className = 'timestamp';
-    userTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-    userMsg.appendChild(userTime);
+      const assistantMsg = document.createElement('div');
+      assistantMsg.className = 'message assistant';
+      const assistantContent = document.createElement('div');
+      assistantContent.classList.add('message-content');
+      assistantContent.innerHTML = marked.parse(qaPairs[i].assistant);
+      assistantMsg.appendChild(assistantContent);
+      const assistantTime = document.createElement('div');
+      assistantTime.className = 'timestamp';
+      assistantTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+      assistantMsg.appendChild(assistantTime);
 
-    // پیام دستیار
-    const assistantMsg = document.createElement('div');
-    assistantMsg.className = 'message assistant';
-    const assistantContent = document.createElement('div');
-    assistantContent.classList.add('message-content');
-    assistantContent.innerHTML = marked.parse(assistantText);
-    assistantMsg.appendChild(assistantContent);
+      blockDiv.appendChild(userMsg);
+      blockDiv.appendChild(assistantMsg);
 
-    const assistantTime = document.createElement('div');
-    assistantTime.className = 'timestamp';
-    assistantTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-    assistantMsg.appendChild(assistantTime);
+      chatDiv.appendChild(blockDiv);
 
-    blockDiv.appendChild(userMsg);
-    blockDiv.appendChild(assistantMsg);
-
-    chatDiv.insertBefore(blockDiv, chatDiv.firstChild);
+      if(i === qaPairs.length - 1){
+        // اسکرول به سوال جدید (اولین بلوک)
+        userMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
-
-  // آرایه برای نگهداری فقط جفت سوال-جواب‌ها
-  let qaPairs = [];
 
   inputMsg.addEventListener('input', () => {
     sendBtn.disabled = inputMsg.value.trim() === "";
@@ -308,19 +305,17 @@
     const MAX_HISTORY = 5;
 
     try {
-      // پیام‌های گذشته: پیام سیستم + ۵ جفت پیام آخر (user+assistant)
-      // ساخت آرایه conversation برای ارسال به سرور
+      // پیام‌های گذشته: پیام سیستم + ۵ جفت پیام آخر
       let messagesToSend = [
-        conversation[0]
+        {role:"system", content:"شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."}
       ];
       for(let i = Math.max(qaPairs.length - MAX_HISTORY, 0); i < qaPairs.length; i++) {
         messagesToSend.push({role: "user", content: qaPairs[i].user});
         messagesToSend.push({role: "assistant", content: qaPairs[i].assistant});
       }
-      // پیام جدید کاربر اضافه شود
       messagesToSend.push({role: "user", content: userText});
 
-      // محاسبه توکن ورودی پیام جدید
+      // توکن ورودی پیام جدید
       totalInputTokens += countTokens(userText);
       updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
@@ -340,14 +335,9 @@
         totalOutputTokens += countTokens(data.answer);
         updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
-        // ذخیره جفت جدید سوال-جواب
+        // اضافه کردن جفت جدید و رندر کل چت
         qaPairs.push({user: userText, assistant: data.answer});
-
-        // پیام‌ها را پاک و مجدد با ترتیب معکوس نمایش بده
-        clearChat();
-        for(let i = qaPairs.length -1; i >=0; i--) {
-          prependChatBlock(qaPairs[i].user, qaPairs[i].assistant);
-        }
+        renderChat();
       } else {
         alert("پاسخ نامعتبر از سرور دریافت شد.");
       }
