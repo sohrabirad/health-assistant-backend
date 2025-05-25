@@ -4,12 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>چت پیشرفته دستیار سلامت</title>
+
+  <!-- فونت ایران سنس -->
   <style>
     @font-face {
       font-family: 'IranSans';
       src: url('Fonts/irsans.ttf') format('truetype');
     }
+  </style>
 
+  <!-- استایل اصلی -->
+  <style>
     body {
       font-family: 'IranSans', Tahoma, sans-serif;
       background-color: #f5f7fa;
@@ -25,6 +30,7 @@
       padding: 15px;
       text-align: center;
       font-size: 1.5rem;
+      user-select: none;
     }
     #chat {
       flex-grow: 1;
@@ -32,23 +38,47 @@
       padding: 10px;
       display: flex;
       flex-direction: column;
+      scrollbar-width: thin;
+      scrollbar-color: #007bff #e0e0e0;
     }
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+    #chat::-webkit-scrollbar-track {
+      background: #e0e0e0;
+    }
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #007bff;
+      border-radius: 10px;
+    }
+
     .message {
       max-width: 70%;
-      margin: 5px 0;
-      padding: 10px;
+      margin: 8px 0;
+      padding: 12px 16px;
       border-radius: 12px;
       position: relative;
       word-wrap: break-word;
       white-space: pre-wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      line-height: 1.5;
     }
-    .user { align-self: flex-end; background-color: #d1e7ff; }
-    .assistant { align-self: flex-start; background-color: #e2ffe2; }
+    .user {
+      align-self: flex-end;
+      background-color: #d1e7ff;
+      color: #0a3d62;
+    }
+    .assistant {
+      align-self: flex-start;
+      background-color: #e2ffe2;
+      color: #1b4332;
+    }
     .timestamp {
       font-size: 0.7rem;
       color: #666;
-      margin-top: 4px;
+      margin-top: 6px;
       text-align: right;
+      user-select: none;
     }
     #inputArea {
       display: flex;
@@ -64,6 +94,7 @@
       border: 1px solid #ccc;
       border-radius: 6px;
       outline: none;
+      direction: rtl;
     }
     #sendBtn {
       padding: 0 20px;
@@ -74,6 +105,7 @@
       color: white;
       border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
     #sendBtn:disabled {
       background-color: #a0c7ff;
@@ -98,8 +130,91 @@
       padding: 5px;
       border-radius: 6px;
       font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* استایل محتوا برای markdown */
+
+    .message-content {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: inherit;
+    }
+
+    /* تیترها */
+    .message-content h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.3em;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 0.2em;
+      margin-top: 0.5em;
+    }
+    .message-content h2 {
+      font-size: 1.3rem;
+      margin-bottom: 0.3em;
+      border-bottom: 1px solid #007bff;
+      padding-bottom: 0.15em;
+      margin-top: 0.4em;
+    }
+    .message-content h3 {
+      font-size: 1.1rem;
+      margin-top: 0.4em;
+      margin-bottom: 0.3em;
+    }
+
+    /* لیست‌ها */
+    .message-content ul, .message-content ol {
+      padding-left: 1.5em;
+      margin: 0.5em 0;
+    }
+    .message-content li {
+      margin-bottom: 0.3em;
+    }
+
+    /* کدها */
+    .message-content pre {
+      background-color: #f0f0f0;
+      border-radius: 6px;
+      padding: 10px;
+      overflow-x: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      margin: 0.7em 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    }
+    .message-content code {
+      background-color: #e8e8e8;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+    }
+
+    /* نقل قول */
+    .message-content blockquote {
+      border-left: 4px solid #007bff;
+      padding-left: 10px;
+      color: #555;
+      margin: 0.7em 0;
+      font-style: italic;
+      background-color: #f9faff;
+      border-radius: 4px;
+    }
+
+    /* لینک */
+    .message-content a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .message-content a:hover {
+      text-decoration: underline;
     }
   </style>
+
+  <!-- کتابخانه marked برای رندر markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
@@ -108,11 +223,11 @@
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
 <div id="inputArea">
-  <select id="modelSelect">
+  <select id="modelSelect" aria-label="انتخاب مدل هوش مصنوعی">
     <option value="gpt-4o">gpt-4o (پیش‌فرض)</option>
   </select>
-  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" />
-  <div id="loadingSpinner"></div>
+  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" aria-label="متن پیام" />
+  <div id="loadingSpinner" role="status" aria-live="assertive" aria-label="در حال ارسال..."></div>
   <button id="sendBtn" disabled>ارسال</button>
 </div>
 
@@ -134,6 +249,7 @@
     "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
   ];
 
+  // پر کردن مدل‌ها در select بجز gpt-4o (که قبلا اضافه شده)
   modelList.forEach(model => {
     if (model !== "gpt-4o") {
       const opt = document.createElement('option');
@@ -143,6 +259,7 @@
     }
   });
 
+  // بارگذاری مدل ذخیره شده
   const savedModel = localStorage.getItem('selected_model');
   if (savedModel && modelList.includes(savedModel)) {
     modelSelect.value = savedModel;
@@ -152,29 +269,38 @@
     localStorage.setItem('selected_model', modelSelect.value);
   });
 
+  // بارگذاری تاریخچه چت (فقط 3 پیام آخر)
   function loadChatHistory() {
     const history = localStorage.getItem('chat_history');
     if (!history) return;
     const messages = JSON.parse(history);
-    const lastMessages = messages.slice(-3); // فقط ۳ پیام آخر
+    const lastMessages = messages.slice(-3);
     lastMessages.forEach(({role, text, timestamp}) => {
       appendMessage(text, role, timestamp);
     });
   }
 
+  // ذخیره پیام در localStorage (حداکثر 50 پیام)
   function saveMessage(role, text, timestamp) {
     let history = localStorage.getItem('chat_history');
     history = history ? JSON.parse(history) : [];
     history.push({role, text, timestamp});
-    const trimmed = history.slice(-50); // فقط ۵۰ پیام آخر ذخیره شود
+    const trimmed = history.slice(-50);
     localStorage.setItem('chat_history', JSON.stringify(trimmed));
   }
 
+  // افزودن پیام به صفحه با رندر markdown
   function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
+
+    // رندر markdown به html
+    const messageHtml = marked.parse(text);
+
     const messageText = document.createElement('div');
-    messageText.textContent = text;
+    messageText.classList.add('message-content');
+    messageText.innerHTML = messageHtml;
+
     const timeDiv = document.createElement('div');
     timeDiv.className = 'timestamp';
     if (!timestamp) {
@@ -182,17 +308,22 @@
       timestamp = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
     }
     timeDiv.textContent = timestamp;
+
     msgDiv.appendChild(messageText);
     msgDiv.appendChild(timeDiv);
     chatDiv.appendChild(msgDiv);
+
     chatDiv.scrollTop = chatDiv.scrollHeight;
+
     saveMessage(role, text, timestamp);
   }
 
+  // فعال/غیرفعال کردن دکمه ارسال بر اساس ورودی
   inputMsg.addEventListener('input', () => {
     sendBtn.disabled = inputMsg.value.trim() === "";
   });
 
+  // ارسال پیام به سرور و دریافت پاسخ
   async function sendMessage() {
     const text = inputMsg.value.trim();
     if (!text) return;
@@ -209,7 +340,13 @@
       });
       if (!response.ok) throw new Error("خطا در پاسخ سرور");
       const data = await response.json();
-      appendMessage(data.answer, "assistant");
+
+      // اگر پاسخ شامل فیلد answer بود
+      if (data.answer) {
+        appendMessage(data.answer, "assistant");
+      } else {
+        appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
+      }
     } catch (error) {
       appendMessage("خطا در ارتباط با سرور", "assistant");
       console.error(error);
