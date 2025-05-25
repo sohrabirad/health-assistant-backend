@@ -166,7 +166,6 @@
   <button id="sendBtn" disabled>ارسال</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/gpt-3-encoder@1.1.4/dist/gpt-3-encoder.min.js"></script>
 <script>
   const chatDiv = document.getElementById('chat');
   const inputMsg = document.getElementById('inputMsg');
@@ -176,7 +175,6 @@
   const tokenCountDiv = document.getElementById('tokenCount');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
-  // آرایه ذخیره سابقه پیام‌ها
   let conversation = [
     {
       role: "system",
@@ -184,13 +182,12 @@
     }
   ];
 
-  // تابع شمارش توکن‌ها با gpt-3-encoder
+  // تابع تخمینی شمارش توکن: هر 4 کاراکتر = 1 توکن
   function countTokens(text) {
-    const encoded = GPT3Encoder.encode(text);
-    return encoded.length;
+    return Math.ceil(text.length / 4);
   }
 
-  // محاسبه تعداد توکن‌های کل conversation ورودی
+  // محاسبه توکن کل پیام‌ها
   function calculateTokens(messages) {
     let total = 0;
     for (const msg of messages) {
@@ -199,7 +196,6 @@
     return total;
   }
 
-  // به‌روزرسانی نمایش تعداد توکن
   function updateTokenCount(inputTokens, outputTokens = 0) {
     tokenCountDiv.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | کل: ${inputTokens + outputTokens}`;
   }
@@ -244,11 +240,10 @@
 
     const MAX_HISTORY = 5;
     const messagesToSend = [
-      conversation[0],  // پیام سیستم
+      conversation[0],
       ...conversation.slice(-MAX_HISTORY)
     ];
 
-    // محاسبه توکن ورودی فعلی و نمایش اولیه (قبل از دریافت پاسخ)
     const inputTokens = calculateTokens(messagesToSend);
     updateTokenCount(inputTokens, 0);
 
@@ -269,7 +264,6 @@
         conversation.push({ role: "assistant", content: data.answer });
         appendMessage(data.answer, "assistant");
 
-        // محاسبه توکن پاسخ (تقریبی)
         const outputTokens = countTokens(data.answer);
         updateTokenCount(inputTokens, outputTokens);
       } else {
@@ -285,32 +279,14 @@
   }
 
   sendBtn.addEventListener('click', sendMessage);
-  inputMsg.addEventListener('keypress', e => {
+  inputMsg.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !sendBtn.disabled) {
       sendMessage();
     }
   });
 
-  // بارگذاری سابقه (در صورت نیاز)
-  function loadChatHistory() {
-    const history = localStorage.getItem('chat_history');
-    if (!history) return;
-    const messages = JSON.parse(history);
-    messages.forEach(({ role, content, timestamp }) => {
-      appendMessage(content, role, timestamp);
-    });
-    conversation = messages.length ? messages : conversation;
-  }
+  // اگر لازم دارید می‌توانید اینجا کد ذخیره و بارگذاری سابقه چت با localStorage را اضافه کنید
 
-  // ذخیره سابقه (اختیاری)
-  function saveChatHistory() {
-    localStorage.setItem('chat_history', JSON.stringify(conversation));
-  }
-
-  const observer = new MutationObserver(saveChatHistory);
-  observer.observe(chatDiv, { childList: true });
-
-  loadChatHistory();
 </script>
 
 </body>
