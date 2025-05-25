@@ -5,16 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>چت پیشرفته دستیار سلامت</title>
 
-  <!-- فونت ایران سنس -->
   <style>
     @font-face {
       font-family: 'IranSans';
       src: url('Fonts/irsans.ttf') format('truetype');
     }
-  </style>
 
-  <!-- استایل اصلی -->
-  <style>
     body {
       font-family: 'IranSans', Tahoma, sans-serif;
       background-color: #f5f7fa;
@@ -133,7 +129,7 @@
       cursor: pointer;
     }
 
-    /* استایل محتوا برای markdown */
+    /* Markdown content styling */
 
     .message-content {
       font-size: 0.85rem;
@@ -142,40 +138,38 @@
     }
 
     .message-content p {
-      margin: 0.3em 0;
+      margin: 0;
+      padding: 0;
+      line-height: 1.2;
     }
 
-    /* تیترها */
     .message-content h1 {
       font-size: 1.5rem;
-      margin-bottom: 0.3em;
+      margin: 0.2em 0;
       border-bottom: 2px solid #007bff;
       padding-bottom: 0.2em;
-      margin-top: 0.5em;
     }
     .message-content h2 {
       font-size: 1.3rem;
-      margin-bottom: 0.3em;
+      margin: 0.2em 0;
       border-bottom: 1px solid #007bff;
       padding-bottom: 0.15em;
-      margin-top: 0.4em;
     }
     .message-content h3 {
       font-size: 1.1rem;
-      margin-top: 0.4em;
-      margin-bottom: 0.3em;
+      margin: 0.2em 0;
     }
 
-    /* لیست‌ها */
     .message-content ul, .message-content ol {
-      margin: 0.3em 0 0.6em 1.5em;
-      padding-left: 0;
+      margin: 0;
+      padding-left: 1.2em;
     }
     .message-content li {
-      margin-bottom: 0.25em;
+      margin: 0;
+      padding: 0;
+      line-height: 1.2;
     }
 
-    /* کدها */
     .message-content pre {
       background-color: #f0f0f0;
       border-radius: 6px;
@@ -196,18 +190,16 @@
       font-size: 0.85rem;
     }
 
-    /* نقل قول */
     .message-content blockquote {
       border-left: 4px solid #007bff;
-      padding-left: 12px;
+      padding-left: 8px;
       color: #555;
-      margin: 0.5em 0;
+      margin: 0;
       font-style: italic;
       background-color: #f9faff;
       border-radius: 4px;
     }
 
-    /* لینک */
     .message-content a {
       color: #007bff;
       text-decoration: none;
@@ -217,7 +209,6 @@
     }
   </style>
 
-  <!-- کتابخانه marked برای رندر markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
@@ -253,7 +244,6 @@
     "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
   ];
 
-  // پر کردن مدل‌ها در select بجز gpt-4o (که قبلا اضافه شده)
   modelList.forEach(model => {
     if (model !== "gpt-4o") {
       const opt = document.createElement('option');
@@ -263,7 +253,6 @@
     }
   });
 
-  // بارگذاری مدل ذخیره شده
   const savedModel = localStorage.getItem('selected_model');
   if (savedModel && modelList.includes(savedModel)) {
     modelSelect.value = savedModel;
@@ -273,7 +262,6 @@
     localStorage.setItem('selected_model', modelSelect.value);
   });
 
-  // بارگذاری تاریخچه چت (فقط 3 پیام آخر)
   function loadChatHistory() {
     const history = localStorage.getItem('chat_history');
     if (!history) return;
@@ -284,7 +272,6 @@
     });
   }
 
-  // ذخیره پیام در localStorage (حداکثر 50 پیام)
   function saveMessage(role, text, timestamp) {
     let history = localStorage.getItem('chat_history');
     history = history ? JSON.parse(history) : [];
@@ -293,18 +280,23 @@
     localStorage.setItem('chat_history', JSON.stringify(trimmed));
   }
 
-  // حذف خطوط خالی پشت سر هم بیشتر از 1 خط
+  // پاک کردن خطوط خالی پشت سر هم بیشتر از 1 خط
   function cleanText(text) {
-    return text.replace(/(\n\s*){2,}/g, '\n\n');
+    return text.replace(/(\n\s*){2,}/g, '\n');
   }
 
-  // افزودن پیام به صفحه با رندر markdown
+  // جایگزینی خطوط جدید با دو فاصله + \n برای خط جدید بدون ایجاد پاراگراف جدید در Markdown
+  function markdownWithLineBreaks(text) {
+    let clean = cleanText(text);
+    return clean.split('\n').map(line => line.trim()).join('  \n');
+  }
+
   function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
 
-    const clean = cleanText(text);
-    const messageHtml = marked.parse(clean);
+    const processed = markdownWithLineBreaks(text);
+    const messageHtml = marked.parse(processed);
 
     const messageText = document.createElement('div');
     messageText.classList.add('message-content');
@@ -327,12 +319,10 @@
     saveMessage(role, text, timestamp);
   }
 
-  // فعال/غیرفعال کردن دکمه ارسال بر اساس ورودی
   inputMsg.addEventListener('input', () => {
     sendBtn.disabled = inputMsg.value.trim() === "";
   });
 
-  // ارسال پیام به سرور و دریافت پاسخ
   async function sendMessage() {
     const text = inputMsg.value.trim();
     if (!text) return;
