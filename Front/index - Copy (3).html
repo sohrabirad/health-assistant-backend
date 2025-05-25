@@ -232,15 +232,21 @@
     }
   ];
 
-  // شمارش توکن تقریبی: هر ۴ کاراکتر = ۱ توکن
+  // تابع تخمینی شمارش توکن: هر ۴ کاراکتر = ۱ توکن
   function countTokens(text) {
     return Math.ceil(text.length / 4);
   }
 
-  let totalInputTokens = 0;
-  let totalOutputTokens = 0;
+  // محاسبه توکن کل پیام‌ها
+  function calculateTokens(messages) {
+    let total = 0;
+    for (const msg of messages) {
+      total += countTokens(msg.content);
+    }
+    return total;
+  }
 
-  function updateTokenDisplay(inputTokens, outputTokens) {
+  function updateTokenDisplay(inputTokens, outputTokens = 0) {
     tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
   }
 
@@ -262,15 +268,9 @@
 
     msgDiv.appendChild(messageText);
     msgDiv.appendChild(timeDiv);
+    chatDiv.appendChild(msgDiv);
 
-    if(role === 'assistant') {
-      // پیام دستیار رو در ابتدا اضافه کن
-      chatDiv.insertBefore(msgDiv, chatDiv.firstChild);
-    } else {
-      // پیام کاربر رو در انتها اضافه کن
-      chatDiv.appendChild(msgDiv);
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
+    chatDiv.scrollTop = chatDiv.scrollHeight;
   }
 
   inputMsg.addEventListener('input', () => {
@@ -294,10 +294,9 @@
       ...conversation.slice(-MAX_HISTORY)
     ];
 
-    // توکن پیام ورودی جدید را به کل اضافه کن
-    const inputTokensThisMessage = countTokens(text);
-    totalInputTokens += inputTokensThisMessage;
-    updateTokenDisplay(totalInputTokens, totalOutputTokens);
+    // محاسبه توکن ورودی و نمایش
+    const inputTokens = calculateTokens(messagesToSend);
+    updateTokenDisplay(inputTokens, 0);
 
     try {
       const response = await fetch(apiUrl, {
@@ -316,9 +315,9 @@
         conversation.push({ role: "assistant", content: data.answer });
         appendMessage(data.answer, "assistant");
 
-        const outputTokensThisMessage = countTokens(data.answer);
-        totalOutputTokens += outputTokensThisMessage;
-        updateTokenDisplay(totalInputTokens, totalOutputTokens);
+        // محاسبه توکن خروجی تقریبی و نمایش
+        const outputTokens = countTokens(data.answer);
+        updateTokenDisplay(inputTokens, outputTokens);
       } else {
         appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
       }
@@ -333,6 +332,7 @@
 
   sendBtn.addEventListener('click', sendMessage);
 
+  // ارسال با Enter بدون Shift و Ctrl
   inputMsg.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
       e.preventDefault();
