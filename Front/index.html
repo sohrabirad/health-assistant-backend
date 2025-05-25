@@ -27,6 +27,16 @@
       font-size: 1.5rem;
       user-select: none;
     }
+    #tokenDisplay {
+      background-color: #e0e0e0;
+      color: #333;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #ccc;
+      direction: ltr;
+      text-align: left;
+      user-select: none;
+    }
     #chat {
       flex-grow: 1;
       overflow-y: auto;
@@ -148,6 +158,7 @@
 <body>
 
 <header>چت پیشرفته دستیار سلامت</header>
+<div id="tokenDisplay">توکن مصرفی (حدوداً): 0</div>
 
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
@@ -166,24 +177,51 @@
   const sendBtn = document.getElementById('sendBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
   const modelSelect = document.getElementById('modelSelect');
+  const tokenDisplay = document.getElementById('tokenDisplay');
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
 
   const modelList = [
-    "whisper-1", "gpt-4o-mini", "gpt-4o", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1",
-    "o3-mini-high", "gpt-4o-audio-preview", "o3-mini", "o3", "o3-mini-low",
-    "o1", "o1-mini", "o4-mini", "gpt-4.5-preview", "chatgpt-4o-latest",
-    "gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-exp-03-25",
-    "gemini-2.0-flash-lite-preview", "gemini-2.0-flash",
-    "deepseek-reasoner", "deepseek-chat",
-    "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
+    "whisper-1",
+    "gpt-4o-mini (پیش‌فرض)",
+    "gpt-4o",
+    "gpt-4.1-nano",
+    "gpt-4.1-mini",
+    "gpt-4.1",
+    "o3-mini-high",
+    "gpt-4o-audio-preview",
+    "o3-mini",
+    "o3",
+    "o3-mini-low",
+    "o1",
+    "o1-mini",
+    "o4-mini",
+    "gpt-4.5-preview",
+    "chatgpt-4o-latest",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-pro-exp-03-25",
+    "gemini-2.0-flash-lite-preview",
+    "gemini-2.0-flash",
+    "deepseek-reasoner",
+    "deepseek-chat",
+    "claude-3-7-sonnet-20250219-thinking",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-7-sonnet-20250219"
   ];
 
-  // پر کردن کمبوباکس مدل‌ها با پیش‌فرض gpt-4o-mini
-  modelList.forEach(model => {
+  // مدل اصلی های جداگانه برای value و label
+  const models = modelList.map(item => {
+    if(item.includes('(پیش‌فرض)')) {
+      return { value: item.replace(' (پیش‌فرض)', ''), label: item };
+    }
+    return { value: item, label: item };
+  });
+
+  // پر کردن کمبوباکس مدل‌ها
+  models.forEach(model => {
     const opt = document.createElement('option');
-    opt.value = model;
-    opt.textContent = model;
-    if(model === "gpt-4o-mini") opt.selected = true;
+    opt.value = model.value;
+    opt.textContent = model.label;
+    if(model.value === 'gpt-4o-mini') opt.selected = true;
     modelSelect.appendChild(opt);
   });
 
@@ -193,6 +231,24 @@
       content: "شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."
     }
   ];
+
+  // تابع تخمینی شمارش توکن: هر ۴ کاراکتر = ۱ توکن
+  function countTokens(text) {
+    return Math.ceil(text.length / 4);
+  }
+
+  // محاسبه توکن کل پیام‌ها
+  function calculateTokens(messages) {
+    let total = 0;
+    for (const msg of messages) {
+      total += countTokens(msg.content);
+    }
+    return total;
+  }
+
+  function updateTokenDisplay(inputTokens, outputTokens = 0) {
+    tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
+  }
 
   function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
@@ -234,9 +290,13 @@
 
     const MAX_HISTORY = 5;
     const messagesToSend = [
-      conversation[0],
+      conversation[0], // پیام سیستم
       ...conversation.slice(-MAX_HISTORY)
     ];
+
+    // محاسبه توکن ورودی و نمایش
+    const inputTokens = calculateTokens(messagesToSend);
+    updateTokenDisplay(inputTokens, 0);
 
     try {
       const response = await fetch(apiUrl, {
@@ -254,6 +314,10 @@
       if (data.answer) {
         conversation.push({ role: "assistant", content: data.answer });
         appendMessage(data.answer, "assistant");
+
+        // محاسبه توکن خروجی تقریبی و نمایش
+        const outputTokens = countTokens(data.answer);
+        updateTokenDisplay(inputTokens, outputTokens);
       } else {
         appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
       }
@@ -268,6 +332,7 @@
 
   sendBtn.addEventListener('click', sendMessage);
 
+  // ارسال با Enter بدون Shift و Ctrl
   inputMsg.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.ctrlKey) {
       e.preventDefault();
