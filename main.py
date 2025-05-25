@@ -6,6 +6,7 @@ from openai import OpenAI
 import uvicorn
 from io import BytesIO
 from PyPDF2 import PdfReader
+import traceback
 
 app = FastAPI()
 
@@ -39,16 +40,19 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
 
     # اگر فایل ارسال شده باشد
     if file:
-        file_content = await file.read()
-        if file.filename.endswith('.pdf'):
-            # استخراج متن از PDF
-            text = extract_text_from_pdf(file_content)
-        else:
-            # فرض می‌کنیم که فایل متنی است
-            text = file_content.decode('utf-8')
-        
-        # اضافه کردن محتوای فایل به مکالمه
-        conversation.append({"role": "user", "content": text})
+        try:
+            file_content = await file.read()
+            if file.filename.endswith('.pdf'):
+                # استخراج متن از PDF
+                text = extract_text_from_pdf(file_content)
+            else:
+                # فرض می‌کنیم که فایل متنی است
+                text = file_content.decode('utf-8')
+            
+            # اضافه کردن محتوای فایل به مکالمه
+            conversation.append({"role": "user", "content": text})
+        except Exception as e:
+            return {"error": f"خطا در پردازش فایل: {str(e)}"}
 
     # اگر conversation موجود نباشد، یک مقدار پیش‌فرض قرار می‌دهیم
     if not conversation or not isinstance(conversation, list):
@@ -66,16 +70,21 @@ async def chat_endpoint(request: Request, file: UploadFile = File(None)):
         return {"answer": answer}
 
     except Exception as e:
-        return {"error": f"مشکلی در ارتباط با مدل {model} پیش آمد: {str(e)}"}
+        # اضافه کردن لاگ خطا
+        error_details = traceback.format_exc()  # نمایش جزئیات دقیق خطا
+        return {"error": f"مشکلی در ارتباط با مدل {model} پیش آمد: {str(e)}\nDetails: {error_details}"}
 
 # استخراج متن از فایل PDF
 def extract_text_from_pdf(file_content: bytes) -> str:
     """استخراج متن از فایل PDF"""
-    pdf_reader = PdfReader(BytesIO(file_content))
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
+    try:
+        pdf_reader = PdfReader(BytesIO(file_content))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        return text
+    except Exception as e:
+        raise ValueError(f"خطا در پردازش فایل PDF: {str(e)}")
 
 # روت اصلی
 @app.get("/")
