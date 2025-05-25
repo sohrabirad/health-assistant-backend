@@ -1,159 +1,164 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>چت پیشرفته دستیار سلامت</title>
-  <style>
-    @font-face {
-      font-family: 'IranSans';
-      src: url('Fonts/irsans.ttf') format('truetype');
-    }
-    body {
-      font-family: 'IranSans', Tahoma, sans-serif;
-      background-color: #f5f7fa;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      direction: rtl;
-      text-align: right;
-    }
-    header {
-      background-color: #007bff;
-      color: white;
-      padding: 15px;
-      font-size: 1.5rem;
-      user-select: none;
-    }
-    #tokenDisplay {
-      background-color: #e0e0e0;
-      color: #333;
-      padding: 8px 15px;
-      font-size: 0.9rem;
-      border-bottom: 1px solid #ccc;
-      direction: ltr;
-      text-align: left;
-      user-select: none;
-    }
-    #chat {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      scrollbar-width: thin;
-      scrollbar-color: #007bff #e0e0e0;
-      text-align: right;
-      background: white;
-    }
-    #chat::-webkit-scrollbar {
-      width: 8px;
-    }
-    #chat::-webkit-scrollbar-track {
-      background: #e0e0e0;
-    }
-    #chat::-webkit-scrollbar-thumb {
-      background-color: #007bff;
-      border-radius: 10px;
-    }
-    .message {
-      max-width: 70%;
-      margin: 8px 0;
-      padding: 12px 16px;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      line-height: 1.3;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-      text-align: right;
-      background: #e2ffe2;
-      color: #1b4332;
-    }
-    .user {
-      align-self: flex-end;
-      background-color: #d1e7ff;
-      color: #0a3d62;
-    }
-    .assistant {
-      align-self: flex-start;
-    }
-    .timestamp {
-      font-size: 0.65rem;
-      color: #666;
-      margin-top: 4px;
-      text-align: right;
-      user-select: none;
-    }
-    #inputArea {
-      display: flex;
-      padding: 10px;
-      background-color: #fff;
-      border-top: 1px solid #ccc;
-      align-items: center;
-      direction: rtl;
-    }
-    #inputMsg {
-      flex-grow: 1;
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      outline: none;
-      resize: vertical;
-      min-height: 40px;
-      max-height: 120px;
-      direction: rtl;
-      text-align: right;
-      font-family: 'IranSans', Tahoma, sans-serif;
-    }
-    #sendBtn {
-      padding: 0 20px;
-      margin-left: 10px;
-      font-size: 1rem;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      height: 40px;
-    }
-    #sendBtn:disabled {
-      background-color: #a0c7ff;
-      cursor: not-allowed;
-    }
-    #loadingSpinner {
-      display: none;
-      margin-left: 10px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #007bff;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    #modelSelect {
-      margin-left: 10px;
-      padding: 5px;
-      border-radius: 6px;
-      font-family: inherit;
-      cursor: pointer;
-      direction: ltr;
-      text-align: left;
-    }
-    .message-content {
-      font-size: 0.85rem;
-      line-height: 1.3;
-      color: inherit;
-      text-align: right;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>چت پیشرفته دستیار سلامت</title>
+<style>
+  @font-face {
+    font-family: 'IranSans';
+    src: url('Fonts/irsans.ttf') format('truetype');
+  }
+  body {
+    font-family: 'IranSans', Tahoma, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    direction: rtl;
+    text-align: right;
+  }
+  header {
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    font-size: 1.5rem;
+    user-select: none;
+  }
+  #tokenDisplay {
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #ccc;
+    direction: ltr;
+    text-align: left;
+    user-select: none;
+  }
+  #chat {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #e0e0e0;
+    text-align: right;
+    background: white;
+  }
+  #chat::-webkit-scrollbar {
+    width: 8px;
+  }
+  #chat::-webkit-scrollbar-track {
+    background: #e0e0e0;
+  }
+  #chat::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 10px;
+  }
+  .chat-block {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  .message {
+    max-width: 70%;
+    margin: 4px 0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    line-height: 1.3;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    text-align: right;
+    background: #e2ffe2;
+    color: #1b4332;
+  }
+  .user {
+    align-self: flex-end;
+    background-color: #d1e7ff;
+    color: #0a3d62;
+  }
+  .assistant {
+    align-self: flex-start;
+  }
+  .timestamp {
+    font-size: 0.65rem;
+    color: #666;
+    margin-top: 4px;
+    text-align: right;
+    user-select: none;
+  }
+  #inputArea {
+    display: flex;
+    padding: 10px;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+    align-items: center;
+    direction: rtl;
+  }
+  #inputMsg {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    resize: vertical;
+    min-height: 40px;
+    max-height: 120px;
+    direction: rtl;
+    text-align: right;
+    font-family: 'IranSans', Tahoma, sans-serif;
+  }
+  #sendBtn {
+    padding: 0 20px;
+    margin-left: 10px;
+    font-size: 1rem;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 40px;
+  }
+  #sendBtn:disabled {
+    background-color: #a0c7ff;
+    cursor: not-allowed;
+  }
+  #loadingSpinner {
+    display: none;
+    margin-left: 10px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  #modelSelect {
+    margin-left: 10px;
+    padding: 5px;
+    border-radius: 6px;
+    font-family: inherit;
+    cursor: pointer;
+    direction: ltr;
+    text-align: left;
+  }
+  .message-content {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    color: inherit;
+    text-align: right;
+  }
+</style>
 </head>
 <body>
 
@@ -170,7 +175,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
 <script>
   const chatDiv = document.getElementById('chat');
   const inputMsg = document.getElementById('inputMsg');
@@ -244,62 +248,82 @@
     tokenDisplay.textContent = `توکن ورودی: ${inputTokens} | توکن خروجی: ${outputTokens} | مجموع: ${inputTokens + outputTokens}`;
   }
 
-  function appendMessage(text, role, timestamp = null) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message ' + role;
-
-    const messageText = document.createElement('div');
-    messageText.classList.add('message-content');
-    messageText.innerHTML = marked.parse(text);
-
-    const timeDiv = document.createElement('div');
-    timeDiv.className = 'timestamp';
-    if (!timestamp) {
-      const now = new Date();
-      timestamp = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-    }
-    timeDiv.textContent = timestamp;
-
-    msgDiv.appendChild(messageText);
-    msgDiv.appendChild(timeDiv);
-
-    if(role === 'assistant') {
-      // پیام دستیار رو در ابتدا اضافه کن
-      chatDiv.insertBefore(msgDiv, chatDiv.firstChild);
-    } else {
-      // پیام کاربر رو در انتها اضافه کن
-      chatDiv.appendChild(msgDiv);
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
+  // حذف همه پیام‌های چت از DOM
+  function clearChat() {
+    chatDiv.innerHTML = "";
   }
+
+  // اضافه کردن یک بلاک شامل سوال و جواب (جفت پیام) به بالا
+  function prependChatBlock(userText, assistantText) {
+    const blockDiv = document.createElement('div');
+    blockDiv.className = 'chat-block';
+
+    // پیام کاربر
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user';
+    const userContent = document.createElement('div');
+    userContent.classList.add('message-content');
+    userContent.textContent = userText;
+    userMsg.appendChild(userContent);
+
+    const userTime = document.createElement('div');
+    userTime.className = 'timestamp';
+    userTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    userMsg.appendChild(userTime);
+
+    // پیام دستیار
+    const assistantMsg = document.createElement('div');
+    assistantMsg.className = 'message assistant';
+    const assistantContent = document.createElement('div');
+    assistantContent.classList.add('message-content');
+    assistantContent.innerHTML = marked.parse(assistantText);
+    assistantMsg.appendChild(assistantContent);
+
+    const assistantTime = document.createElement('div');
+    assistantTime.className = 'timestamp';
+    assistantTime.textContent = new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+    assistantMsg.appendChild(assistantTime);
+
+    blockDiv.appendChild(userMsg);
+    blockDiv.appendChild(assistantMsg);
+
+    chatDiv.insertBefore(blockDiv, chatDiv.firstChild);
+  }
+
+  // آرایه برای نگهداری فقط جفت سوال-جواب‌ها
+  let qaPairs = [];
 
   inputMsg.addEventListener('input', () => {
     sendBtn.disabled = inputMsg.value.trim() === "";
   });
 
   async function sendMessage() {
-    const text = inputMsg.value.trim();
-    if (!text) return;
-
-    conversation.push({ role: "user", content: text });
-    appendMessage(text, "user");
+    const userText = inputMsg.value.trim();
+    if (!userText) return;
 
     inputMsg.value = "";
     sendBtn.disabled = true;
     loadingSpinner.style.display = "inline-block";
 
     const MAX_HISTORY = 5;
-    const messagesToSend = [
-      conversation[0], // پیام سیستم
-      ...conversation.slice(-MAX_HISTORY)
-    ];
-
-    // توکن پیام ورودی جدید را به کل اضافه کن
-    const inputTokensThisMessage = countTokens(text);
-    totalInputTokens += inputTokensThisMessage;
-    updateTokenDisplay(totalInputTokens, totalOutputTokens);
 
     try {
+      // پیام‌های گذشته: پیام سیستم + ۵ جفت پیام آخر (user+assistant)
+      // ساخت آرایه conversation برای ارسال به سرور
+      let messagesToSend = [
+        conversation[0]
+      ];
+      for(let i = Math.max(qaPairs.length - MAX_HISTORY, 0); i < qaPairs.length; i++) {
+        messagesToSend.push({role: "user", content: qaPairs[i].user});
+        messagesToSend.push({role: "assistant", content: qaPairs[i].assistant});
+      }
+      // پیام جدید کاربر اضافه شود
+      messagesToSend.push({role: "user", content: userText});
+
+      // محاسبه توکن ورودی پیام جدید
+      totalInputTokens += countTokens(userText);
+      updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -312,19 +336,24 @@
       if (!response.ok) throw new Error("خطا در پاسخ سرور");
       const data = await response.json();
 
-      if (data.answer) {
-        conversation.push({ role: "assistant", content: data.answer });
-        appendMessage(data.answer, "assistant");
-
-        const outputTokensThisMessage = countTokens(data.answer);
-        totalOutputTokens += outputTokensThisMessage;
+      if(data.answer){
+        totalOutputTokens += countTokens(data.answer);
         updateTokenDisplay(totalInputTokens, totalOutputTokens);
+
+        // ذخیره جفت جدید سوال-جواب
+        qaPairs.push({user: userText, assistant: data.answer});
+
+        // پیام‌ها را پاک و مجدد با ترتیب معکوس نمایش بده
+        clearChat();
+        for(let i = qaPairs.length -1; i >=0; i--) {
+          prependChatBlock(qaPairs[i].user, qaPairs[i].assistant);
+        }
       } else {
-        appendMessage("پاسخ نامعتبر از سرور دریافت شد.", "assistant");
+        alert("پاسخ نامعتبر از سرور دریافت شد.");
       }
-    } catch (error) {
-      appendMessage("خطا در ارتباط با سرور", "assistant");
-      console.error(error);
+    } catch(e) {
+      alert("خطا در ارتباط با سرور");
+      console.error(e);
     } finally {
       sendBtn.disabled = false;
       loadingSpinner.style.display = "none";
