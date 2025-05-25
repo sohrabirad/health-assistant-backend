@@ -1,150 +1,105 @@
 <!DOCTYPE html>
 <html lang="fa">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>چت پیشرفته دستیار سلامت</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>چت پیشرفته دستیار سلامت</title>
+  <style>
+    @font-face {
+      font-family: 'IranSans';
+      src: url('Fonts/irsans.ttf') format('truetype');
+    }
 
-<style>
-  @font-face {
-    font-family: 'IranSans';
-    src: url('Fonts/irsans.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-  }
-
-  body {
-    font-family: 'IranSans', Tahoma, sans-serif;
-    background-color: #f5f7fa;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  header {
-    background-color: #007bff;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 1.5rem;
-  }
-  #chat {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-  }
-  .message {
-    max-width: 70%;
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 12px;
-    position: relative;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-  }
-  .user {
-    align-self: flex-end;
-    background-color: #d1e7ff;
-  }
-  .assistant {
-    align-self: flex-start;
-    background-color: #e2ffe2;
-  }
-  .timestamp {
-    font-size: 0.7rem;
-    color: #666;
-    margin-top: 4px;
-    text-align: right;
-  }
-  #inputArea {
-    display: flex;
-    padding: 10px;
-    background-color: #fff;
-    border-top: 1px solid #ccc;
-    align-items: center;
-  }
-  #inputMsg {
-    flex-grow: 1;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    outline: none;
-  }
-  #inputMsg:focus {
-    border-color: #007bff;
-  }
-  #sendBtn {
-    padding: 0 20px;
-    margin-left: 10px;
-    font-size: 1rem;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  #sendBtn:disabled {
-    background-color: #a0c7ff;
-    cursor: not-allowed;
-  }
-  #loadingSpinner {
-    display: none;
-    margin-left: 10px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  #chat::-webkit-scrollbar {
-    width: 6px;
-  }
-  #chat::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 3px;
-  }
-
-  /* Dark mode */
-  body.dark {
-    background-color: #121212;
-    color: #eee;
-  }
-  body.dark #chat {
-    background-color: #1e1e1e;
-  }
-  body.dark .user {
-    background-color: #265aeb;
-    color: white;
-  }
-  body.dark .assistant {
-    background-color: #2e7d32;
-    color: white;
-  }
-  body.dark #inputArea {
-    background-color: #1e1e1e;
-    border-top: 1px solid #444;
-  }
-  body.dark #inputMsg {
-    background-color: #2a2a2a;
-    border-color: #555;
-    color: white;
-  }
-  body.dark #sendBtn {
-    background-color: #265aeb;
-  }
-  body.dark #sendBtn:disabled {
-    background-color: #598efc;
-  }
-</style>
+    body {
+      font-family: 'IranSans', Tahoma, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    #chat {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      max-width: 70%;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 12px;
+      position: relative;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .user { align-self: flex-end; background-color: #d1e7ff; }
+    .assistant { align-self: flex-start; background-color: #e2ffe2; }
+    .timestamp {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 4px;
+      text-align: right;
+    }
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+      align-items: center;
+    }
+    #inputMsg {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+    }
+    #sendBtn {
+      padding: 0 20px;
+      margin-left: 10px;
+      font-size: 1rem;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #sendBtn:disabled {
+      background-color: #a0c7ff;
+      cursor: not-allowed;
+    }
+    #loadingSpinner {
+      display: none;
+      margin-left: 10px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #modelSelect {
+      margin-left: 10px;
+      padding: 5px;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+  </style>
 </head>
 <body>
 
@@ -153,8 +108,11 @@
 <div id="chat" role="log" aria-live="polite" aria-relevant="additions"></div>
 
 <div id="inputArea">
-  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" aria-label="پیام خود را بنویسید" />
-  <div id="loadingSpinner" aria-label="در حال بارگذاری"></div>
+  <select id="modelSelect">
+    <option value="gpt-4o">gpt-4o (پیش‌فرض)</option>
+  </select>
+  <input type="text" id="inputMsg" placeholder="پیام خود را بنویسید..." autocomplete="off" />
+  <div id="loadingSpinner"></div>
   <button id="sendBtn" disabled>ارسال</button>
 </div>
 
@@ -163,8 +121,39 @@
   const inputMsg = document.getElementById('inputMsg');
   const sendBtn = document.getElementById('sendBtn');
   const loadingSpinner = document.getElementById('loadingSpinner');
+  const modelSelect = document.getElementById('modelSelect');
 
   const apiUrl = "https://health-assistant-backend-production.up.railway.app/chat";
+
+  const modelList = [
+    "whisper-1", "gpt-4o-mini", "gpt-4o", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1",
+    "o3-mini-high", "gpt-4o-audio-preview", "o3-mini", "o3", "o3-mini-low",
+    "o1", "o1-mini", "o4-mini", "gpt-4.5-preview", "chatgpt-4o-latest",
+    "gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-exp-03-25",
+    "gemini-2.0-flash-lite-preview", "gemini-2.0-flash",
+    "deepseek-reasoner", "deepseek-chat",
+    "claude-3-7-sonnet-20250219-thinking", "claude-3-5-sonnet-20241022", "claude-3-7-sonnet-20250219"
+  ];
+
+  // Populate model select
+  modelList.forEach(model => {
+    if (model !== "gpt-4o") {
+      const opt = document.createElement('option');
+      opt.value = model;
+      opt.textContent = model;
+      modelSelect.appendChild(opt);
+    }
+  });
+
+  // Load selected model from localStorage
+  const savedModel = localStorage.getItem('selected_model');
+  if (savedModel && modelList.includes(savedModel)) {
+    modelSelect.value = savedModel;
+  }
+
+  modelSelect.addEventListener('change', () => {
+    localStorage.setItem('selected_model', modelSelect.value);
+  });
 
   function loadChatHistory() {
     const history = localStorage.getItem('chat_history');
@@ -182,13 +171,11 @@
     localStorage.setItem('chat_history', JSON.stringify(history));
   }
 
-  function appendMessage(text, role, timestamp=null) {
+  function appendMessage(text, role, timestamp = null) {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message ' + role;
-
     const messageText = document.createElement('div');
     messageText.textContent = text;
-
     const timeDiv = document.createElement('div');
     timeDiv.className = 'timestamp';
     if (!timestamp) {
@@ -196,12 +183,10 @@
       timestamp = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
     }
     timeDiv.textContent = timestamp;
-
     msgDiv.appendChild(messageText);
     msgDiv.appendChild(timeDiv);
     chatDiv.appendChild(msgDiv);
     chatDiv.scrollTop = chatDiv.scrollHeight;
-
     saveMessage(role, text, timestamp);
   }
 
@@ -221,7 +206,7 @@
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, model: modelSelect.value })
       });
       if (!response.ok) throw new Error("خطا در پاسخ سرور");
       const data = await response.json();
@@ -236,14 +221,12 @@
   }
 
   sendBtn.addEventListener('click', sendMessage);
-
   inputMsg.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !sendBtn.disabled) {
       sendMessage();
     }
   });
 
-  // Load saved chat history on page load
   loadChatHistory();
 </script>
 

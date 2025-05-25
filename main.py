@@ -1,18 +1,13 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
-from fastapi import FastAPI
-from chat_api import router as chat_router
 from fastapi.staticfiles import StaticFiles
-
+from openai import OpenAI
 import uvicorn
 
 app = FastAPI()
 
-app.include_router(chat_router, prefix="/chatapi")
-
-# فعال کردن CORS برای همه دامنه‌ها (برای توسعه راحت)
+# فعال‌سازی CORS برای دسترسی از همه دامنه‌ها (در توسعه)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # در تولید محدودش کن
@@ -21,35 +16,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# سرو کردن فایل‌های استاتیک فرانت‌اند
+# سرو کردن فایل‌های استاتیک (فرانت‌اند)
 app.mount("/static", StaticFiles(directory="Front"), name="static")
 
-
+# مقداردهی به کلاینت OpenAI
 api_key = os.getenv("YOUR_GAPGPT_API_KEY")
 if not api_key:
     raise ValueError("لطفا متغیر محیطی YOUR_GAPGPT_API_KEY را تنظیم کنید.")
 
 client = OpenAI(base_url='https://api.gapgpt.app/v1', api_key=api_key)
 
+# مسیر اصلی چت با مدل انتخابی
 @app.post("/chat")
 async def chat_endpoint(request: Request):
     data = await request.json()
     message = data.get("message", "")
+    model = data.get("model", "gpt-4o")  # مدل پیش‌فرض
+
     conversation = [
         {"role": "system", "content": "شما یک پزشک یا دستیار پزشک هستید و به طراحی یک سیستم غربالگری هوشمند سلامت کمک می‌کنید."},
         {"role": "user", "content": message}
     ]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=conversation
-    )
-    answer = response.choices[0].message.content
-    return {"answer": answer}
 
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=conversation
+        )
+        answer = response.choices[0].message.content
+        return {"answer": answer}
+
+    except Exception as e:
+        return {"error": f"مشکلی در ارتباط با مدل {model} پیش آمد: {str(e)}"}
+
+# مسیر تست سلامت API
 @app.get("/")
 async def root():
     return {"message": "سلام! سرویس سلامت در حال اجرا است."}
 
+# اجرای مستقیم با Uvicorn
 if __name__ == "__main__":
     port = 8080
     uvicorn.run(app, host="0.0.0.0", port=port)
